@@ -2,9 +2,19 @@ import java.util.ArrayList;
 
 public abstract class BusA {
     public Olc6502 cpu;
+    public Olc2C02 ppu;
+    public Cartridge cart;
 
-    public ArrayList<Short> RAM = new ArrayList<>(64 * 1024);
-    public abstract void write(int addr, short data);
-    public abstract short read(int addr);
-    public abstract short read(int addr, boolean readOnly);
+    public ArrayList<Short> cpuRAM = new ArrayList<>(2 * 1024);
+
+    public abstract void cpuWrite(int addr, short data);
+    public abstract short cpuRead(int addr);
+    public abstract short cpuRead(int addr, boolean readOnly);
+
+    public abstract void insertCartridge(Cartridge cartridge);
+    public abstract void reset();
+    public abstract void clock();
+
+    public long nSystemClockCounter = 0l;
+
 }

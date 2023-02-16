@@ -1,26 +1,32 @@
+import java.io.*;
+
 //Use short (2 bytes, 16-bit) instead of uint8 (1 byte)
 //Use int (4 bytes, 32-bit) instead of uint16 (2 Byte)
 // 0xFF : one byte
 public class test {
     public static void main(String[] args) {
-        /*
-        getLookup("BRK", "BRK", "IMM", 7);getLookup("ORA", "ORA", "IZX", 6);getLookup("???", "XXX", "IMP", 2);getLookup("???", "XXX", "IMP", 8);getLookup("???", "NOP", "IMP", 3);getLookup("ORA", "ORA", "ZP0", 3);getLookup("ASL", "ASL", "ZP0", 5);getLookup("???", "XXX", "IMP", 5);getLookup("PHP", "PHP", "IMP", 3);getLookup("ORA", "ORA", "IMM", 2);getLookup("ASL", "ASL", "IMP", 2);getLookup("???", "XXX", "IMP", 2);getLookup("???", "NOP", "IMP", 4);getLookup("ORA", "ORA", "ABS", 4);getLookup("ASL", "ASL", "ABS", 6);getLookup("???", "XXX", "IMP", 6);
-        getLookup("BPL", "BPL", "REL", 2);getLookup("ORA", "ORA", "IZY", 5);getLookup("???", "XXX", "IMP", 2);getLookup("???", "XXX", "IMP", 8);getLookup("???", "NOP", "IMP", 4);getLookup("ORA", "ORA", "ZPX", 4);getLookup("ASL", "ASL", "ZPX", 6);getLookup("???", "XXX", "IMP", 6);getLookup("CLC", "CLC", "IMP", 2);getLookup("ORA", "ORA", "ABY", 4);getLookup("???", "NOP", "IMP", 2);getLookup("???", "XXX", "IMP", 7);getLookup("???", "NOP", "IMP", 4);getLookup("ORA", "ORA", "ABX", 4);getLookup("ASL", "ASL", "ABX", 7);getLookup("???", "XXX", "IMP", 7);
-        getLookup("JSR", "JSR", "ABS", 6);getLookup("AND", "AND", "IZX", 6);getLookup("???", "XXX", "IMP", 2);getLookup("???", "XXX", "IMP", 8);getLookup("BIT", "BIT", "ZP0", 3);getLookup("AND", "AND", "ZP0", 3);getLookup("ROL", "ROL", "ZP0", 5);getLookup("???", "XXX", "IMP", 5);getLookup("PLP", "PLP", "IMP", 4);getLookup("AND", "AND", "IMM", 2);getLookup("ROL", "ROL", "IMP", 2);getLookup("???", "XXX", "IMP", 2);getLookup("BIT", "BIT", "ABS", 4);getLookup("AND", "AND", "ABS", 4);getLookup("ROL", "ROL", "ABS", 6);getLookup("???", "XXX", "IMP", 6);
-        getLookup("BMI", "BMI", "REL", 2);getLookup("AND", "AND", "IZY", 5);getLookup("???", "XXX", "IMP", 2);getLookup("???", "XXX", "IMP", 8);getLookup("???", "NOP", "IMP", 4);getLookup("AND", "AND", "ZPX", 4);getLookup("ROL", "ROL", "ZPX", 6);getLookup("???", "XXX", "IMP", 6);getLookup("SEC", "SEC", "IMP", 2);getLookup("AND", "AND", "ABY", 4);getLookup("???", "NOP", "IMP", 2);getLookup("???", "XXX", "IMP", 7);getLookup("???", "NOP", "IMP", 4);getLookup("AND", "AND", "ABX", 4);getLookup("ROL", "ROL", "ABX", 7);getLookup("???", "XXX", "IMP", 7);
-        getLookup("RTI", "RTI", "IMP", 6);getLookup("EOR", "EOR", "IZX", 6);getLookup("???", "XXX", "IMP", 2);getLookup("???", "XXX", "IMP", 8);getLookup("???", "NOP", "IMP", 3);getLookup("EOR", "EOR", "ZP0", 3);getLookup("LSR", "LSR", "ZP0", 5);getLookup("???", "XXX", "IMP", 5);getLookup("PHA", "PHA", "IMP", 3);getLookup("EOR", "EOR", "IMM", 2);getLookup("LSR", "LSR", "IMP", 2);getLookup("???", "XXX", "IMP", 2);getLookup("JMP", "JMP", "ABS", 3);getLookup("EOR", "EOR", "ABS", 4);getLookup("LSR", "LSR", "ABS", 6);getLookup("???", "XXX", "IMP", 6);
-        getLookup("BVC", "BVC", "REL", 2);getLookup("EOR", "EOR", "IZY", 5);getLookup("???", "XXX", "IMP", 2);getLookup("???", "XXX", "IMP", 8);getLookup("???", "NOP", "IMP", 4);getLookup("EOR", "EOR", "ZPX", 4);getLookup("LSR", "LSR", "ZPX", 6);getLookup("???", "XXX", "IMP", 6);getLookup("CLI", "CLI", "IMP", 2);getLookup("EOR", "EOR", "ABY", 4);getLookup("???", "NOP", "IMP", 2);getLookup("???", "XXX", "IMP", 7);getLookup("???", "NOP", "IMP", 4);getLookup("EOR", "EOR", "ABX", 4);getLookup("LSR", "LSR", "ABX", 7);getLookup("???", "XXX", "IMP", 7);
-        getLookup("RTS", "RTS", "IMP", 6);getLookup("ADC", "ADC", "IZX", 6);getLookup("???", "XXX", "IMP", 2);getLookup("???", "XXX", "IMP", 8);getLookup("???", "NOP", "IMP", 3);getLookup("ADC", "ADC", "ZP0", 3);getLookup("ROR", "ROR", "ZP0", 5);getLookup("???", "XXX", "IMP", 5);getLookup("PLA", "PLA", "IMP", 4);getLookup("ADC", "ADC", "IMM", 2);getLookup("ROR", "ROR", "IMP", 2);getLookup("???", "XXX", "IMP", 2);getLookup("JMP", "JMP", "IND", 5);getLookup("ADC", "ADC", "ABS", 4);getLookup("ROR", "ROR", "ABS", 6);getLookup("???", "XXX", "IMP", 6);
-        getLookup("BVS", "BVS", "REL", 2);getLookup("ADC", "ADC", "IZY", 5);getLookup("???", "XXX", "IMP", 2);getLookup("???", "XXX", "IMP", 8);getLookup("???", "NOP", "IMP", 4);getLookup("ADC", "ADC", "ZPX", 4);getLookup("ROR", "ROR", "ZPX", 6);getLookup("???", "XXX", "IMP", 6);getLookup("SEI", "SEI", "IMP", 2);getLookup("ADC", "ADC", "ABY", 4);getLookup("???", "NOP", "IMP", 2);getLookup("???", "XXX", "IMP", 7);getLookup("???", "NOP", "IMP", 4);getLookup("ADC", "ADC", "ABX", 4);getLookup("ROR", "ROR", "ABX", 7);getLookup("???", "XXX", "IMP", 7);
-        getLookup("???", "NOP", "IMP", 2);getLookup("STA", "STA", "IZX", 6);getLookup("???", "NOP", "IMP", 2);getLookup("???", "XXX", "IMP", 6);getLookup("STY", "STY", "ZP0", 3);getLookup("STA", "STA", "ZP0", 3);getLookup("STX", "STX", "ZP0", 3);getLookup("???", "XXX", "IMP", 3);getLookup("DEY", "DEY", "IMP", 2);getLookup("???", "NOP", "IMP", 2);getLookup("TXA", "TXA", "IMP", 2);getLookup("???", "XXX", "IMP", 2);getLookup("STY", "STY", "ABS", 4);getLookup("STA", "STA", "ABS", 4);getLookup("STX", "STX", "ABS", 4);getLookup("???", "XXX", "IMP", 4);
-        getLookup("BCC", "BCC", "REL", 2);getLookup("STA", "STA", "IZY", 6);getLookup("???", "XXX", "IMP", 2);getLookup("???", "XXX", "IMP", 6);getLookup("STY", "STY", "ZPX", 4);getLookup("STA", "STA", "ZPX", 4);getLookup("STX", "STX", "ZPY", 4);getLookup("???", "XXX", "IMP", 4);getLookup("TYA", "TYA", "IMP", 2);getLookup("STA", "STA", "ABY", 5);getLookup("TXS", "TXS", "IMP", 2);getLookup("???", "XXX", "IMP", 5);getLookup("???", "NOP", "IMP", 5);getLookup("STA", "STA", "ABX", 5);getLookup("???", "XXX", "IMP", 5);getLookup("???", "XXX", "IMP", 5);
-        getLookup("LDY", "LDY", "IMM", 2);getLookup("LDA", "LDA", "IZX", 6);getLookup("LDX", "LDX", "IMM", 2);getLookup("???", "XXX", "IMP", 6);getLookup("LDY", "LDY", "ZP0", 3);getLookup("LDA", "LDA", "ZP0", 3);getLookup("LDX", "LDX", "ZP0", 3);getLookup("???", "XXX", "IMP", 3);getLookup("TAY", "TAY", "IMP", 2);getLookup("LDA", "LDA", "IMM", 2);getLookup("TAX", "TAX", "IMP", 2);getLookup("???", "XXX", "IMP", 2);getLookup("LDY", "LDY", "ABS", 4);getLookup("LDA", "LDA", "ABS", 4);getLookup("LDX", "LDX", "ABS", 4);getLookup("???", "XXX", "IMP", 4);
-        getLookup("BCS", "BCS", "REL", 2);getLookup("LDA", "LDA", "IZY", 5);getLookup("???", "XXX", "IMP", 2);getLookup("???", "XXX", "IMP", 5);getLookup("LDY", "LDY", "ZPX", 4);getLookup("LDA", "LDA", "ZPX", 4);getLookup("LDX", "LDX", "ZPY", 4);getLookup("???", "XXX", "IMP", 4);getLookup("CLV", "CLV", "IMP", 2);getLookup("LDA", "LDA", "ABY", 4);getLookup("TSX", "TSX", "IMP", 2);getLookup("???", "XXX", "IMP", 4);getLookup("LDY", "LDY", "ABX", 4);getLookup("LDA", "LDA", "ABX", 4);getLookup("LDX", "LDX", "ABY", 4);getLookup("???", "XXX", "IMP", 4);
-        getLookup("CPY", "CPY", "IMM", 2);getLookup("CMP", "CMP", "IZX", 6);getLookup("???", "NOP", "IMP", 2);getLookup("???", "XXX", "IMP", 8);getLookup("CPY", "CPY", "ZP0", 3);getLookup("CMP", "CMP", "ZP0", 3);getLookup("DEC", "DEC", "ZP0", 5);getLookup("???", "XXX", "IMP", 5);getLookup("INY", "INY", "IMP", 2);getLookup("CMP", "CMP", "IMM", 2);getLookup("DEX", "DEX", "IMP", 2);getLookup("???", "XXX", "IMP", 2);getLookup("CPY", "CPY", "ABS", 4);getLookup("CMP", "CMP", "ABS", 4);getLookup("DEC", "DEC", "ABS", 6);getLookup("???", "XXX", "IMP", 6);
-        getLookup("BNE", "BNE", "REL", 2);getLookup("CMP", "CMP", "IZY", 5);getLookup("???", "XXX", "IMP", 2);getLookup("???", "XXX", "IMP", 8);getLookup("???", "NOP", "IMP", 4);getLookup("CMP", "CMP", "ZPX", 4);getLookup("DEC", "DEC", "ZPX", 6);getLookup("???", "XXX", "IMP", 6);getLookup("CLD", "CLD", "IMP", 2);getLookup("CMP", "CMP", "ABY", 4);getLookup("NOP", "NOP", "IMP", 2);getLookup("???", "XXX", "IMP", 7);getLookup("???", "NOP", "IMP", 4);getLookup("CMP", "CMP", "ABX", 4);getLookup("DEC", "DEC", "ABX", 7);getLookup("???", "XXX", "IMP", 7);
-        getLookup("CPX", "CPX", "IMM", 2);getLookup("SBC", "SBC", "IZX", 6);getLookup("???", "NOP", "IMP", 2);getLookup("???", "XXX", "IMP", 8);getLookup("CPX", "CPX", "ZP0", 3);getLookup("SBC", "SBC", "ZP0", 3);getLookup("INC", "INC", "ZP0", 5);getLookup("???", "XXX", "IMP", 5);getLookup("INX", "INX", "IMP", 2);getLookup("SBC", "SBC", "IMM", 2);getLookup("NOP", "NOP", "IMP", 2);getLookup("???", "SBC", "IMP", 2);getLookup("CPX", "CPX", "ABS", 4);getLookup("SBC", "SBC", "ABS", 4);getLookup("INC", "INC", "ABS", 6);getLookup("???", "XXX", "IMP", 6);
-        getLookup("BEQ", "BEQ", "REL", 2);getLookup("SBC", "SBC", "IZY", 5);getLookup("???", "XXX", "IMP", 2);getLookup("???", "XXX", "IMP", 8);getLookup("???", "NOP", "IMP", 4);getLookup("SBC", "SBC", "ZPX", 4);getLookup("INC", "INC", "ZPX", 6);getLookup("???", "XXX", "IMP", 6);getLookup("SED", "SED", "IMP", 2);getLookup("SBC", "SBC", "ABY", 4);getLookup("NOP", "NOP", "IMP", 2);getLookup("???", "XXX", "IMP", 7);getLookup("???", "NOP", "IMP", 4);getLookup("SBC", "SBC", "ABX", 4);getLookup("INC", "INC", "ABX", 7);getLookup("???", "XXX", "IMP", 7);
-        */
+        String file_path = "D:\\Projects\\Java\\nes-emulator-java\\src\\Fire Emblem Gaiden (J) [T-Eng97b].nes";
+        byte[] name = new byte[4];
+        byte[] tst = new byte[4];
+        try {
+            InputStream is = new FileInputStream(file_path);
+            is.read(name);
+            is.read(tst);
+            for (byte b: name){
+                System.out.print((char) b);
+            }
+            System.out.println();
+            for (byte b: tst){
+                System.out.print(String.format("%x ", b));
+            }
+            System.out.println();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
     }
 }
 

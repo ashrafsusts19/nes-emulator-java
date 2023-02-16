@@ -143,12 +143,12 @@ public class Olc6502 extends Olc6502A{
 
     @Override
     public void write(int addr, short data) {
-        bus.write(addr, data);
+        bus.cpuWrite(addr, data);
     }
 
     @Override
     public short read(int addr) {
-        return bus.read(addr, false);
+        return bus.cpuRead(addr, false);
     }
 
     public int getFlag(FLAGS6502 f){
