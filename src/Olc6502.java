@@ -47,15 +47,18 @@ public class Olc6502 extends Olc6502A{
             INSTRUCTION instruction = lookupTable.get(opcode);
             this.cycles = instruction.cycles;
             short additional_cycle1 = 0, additional_cycle2 = 0;
+
             try {
-                additional_cycle1 = (short) instruction.addrMode.invoke(this);
+                Integer ac1 = (Integer) instruction.addrMode.invoke(this);
+                additional_cycle1 = ac1.shortValue();
             } catch (IllegalAccessException e) {
                 e.printStackTrace();
             } catch (InvocationTargetException e) {
                 e.printStackTrace();
             }
             try {
-                additional_cycle2 = (short) instruction.operate.invoke(this);
+                Integer ac2 = (Integer) instruction.operate.invoke(this);
+                additional_cycle2 = ac2.shortValue();
             } catch (IllegalAccessException e) {
                 e.printStackTrace();
             } catch (InvocationTargetException e) {

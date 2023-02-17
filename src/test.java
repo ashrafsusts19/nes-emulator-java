@@ -1,10 +1,14 @@
 import java.io.*;
+import java.util.Random;
 
 //Use short (2 bytes, 16-bit) instead of uint8 (1 byte)
 //Use int (4 bytes, 32-bit) instead of uint16 (2 Byte)
 // 0xFF : one byte
 public class test {
     public static void main(String[] args) {
+        GameFrame gameFrame = new GameFrame();
+    }
+    public static void file_stuff(){
         String file_path = "D:\\Projects\\Java\\nes-emulator-java\\src\\Fire Emblem Gaiden (J) [T-Eng97b].nes";
         byte[] name = new byte[4];
         byte[] tst = new byte[4];
@@ -25,9 +29,8 @@ public class test {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-
     }
+
 }
 
 /*

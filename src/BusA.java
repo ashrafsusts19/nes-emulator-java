@@ -5,7 +5,7 @@ public abstract class BusA {
     public Olc2C02 ppu;
     public Cartridge cart;
 
-    public ArrayList<Short> cpuRAM = new ArrayList<>(2 * 1024);
+    public short[] cpuRAM = new short[2 * 1024];
 
     public abstract void cpuWrite(int addr, short data);
     public abstract short cpuRead(int addr);

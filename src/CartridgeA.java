@@ -5,8 +5,8 @@ public abstract class CartridgeA {
     short nPRGBanks = 0;
     short nCHRBanks = 0;
 
-    public ArrayList<Short> vPRGMemory;
-    public ArrayList<Short> vCHRMemory;
+    public short[] vPRGMemory;
+    public short[] vCHRMemory;
 
     MapperA pMapper;
     

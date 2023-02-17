@@ -1,11 +1,12 @@
 public class Bus extends BusA{
 
     public Bus() {
-        for (int i = 0; i < cpuRAM.size(); i++){
-            cpuRAM.set(i, (short) 0x00);
+        for (int i = 0; i < cpuRAM.length; i++){
+            cpuRAM[i] = (short) 0x00;
         }
         cpu = new Olc6502();
         cpu.connectBus(this);
+        ppu = new Olc2C02();
     }
 
     @Override
@@ -14,7 +15,7 @@ public class Bus extends BusA{
 
         }
         else if (addr >= 0x0000 && addr <= 0xFFFF){
-            cpuRAM.set(addr & 0x07FF, data);
+            cpuRAM[addr & 0x07FF] = data;
         }
         else if (addr >= 0x2000 && addr <= 0x3FFF){
             ppu.cpuWrite(addr & 0x0007, data);
@@ -36,7 +37,7 @@ public class Bus extends BusA{
         }
         if (addr >= 0x0000 && addr <= 0x1FFF)
         {
-            data = cpuRAM.get(addr & 0x07FF);
+            data = cpuRAM[addr & 0x07FF];
         }
         else if (addr >= 0x2000 && addr <= 0x3FFF){
             data = ppu.cpuRead(addr & 0x0007, readOnly);
@@ -58,6 +59,10 @@ public class Bus extends BusA{
 
     @Override
     public void clock() {
-
+        ppu.clock();
+        if (this.nSystemClockCounter % 3 == 0){
+            cpu.clock();
+        }
+        this.nSystemClockCounter++;
     }
 }
