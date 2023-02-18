@@ -21,7 +21,6 @@ public class Olc6502 extends Olc6502A{
         this.getLookup("BNE", "BNE", "REL", (short) 2);this.getLookup("CMP", "CMP", "IZY", (short) 5);this.getLookup("???", "XXX", "IMP", (short) 2);this.getLookup("???", "XXX", "IMP", (short) 8);this.getLookup("???", "NOP", "IMP", (short) 4);this.getLookup("CMP", "CMP", "ZPX", (short) 4);this.getLookup("DEC", "DEC", "ZPX", (short) 6);this.getLookup("???", "XXX", "IMP", (short) 6);this.getLookup("CLD", "CLD", "IMP", (short) 2);this.getLookup("CMP", "CMP", "ABY", (short) 4);this.getLookup("NOP", "NOP", "IMP", (short) 2);this.getLookup("???", "XXX", "IMP", (short) 7);this.getLookup("???", "NOP", "IMP", (short) 4);this.getLookup("CMP", "CMP", "ABX", (short) 4);this.getLookup("DEC", "DEC", "ABX", (short) 7);this.getLookup("???", "XXX", "IMP", (short) 7);
         this.getLookup("CPX", "CPX", "IMM", (short) 2);this.getLookup("SBC", "SBC", "IZX", (short) 6);this.getLookup("???", "NOP", "IMP", (short) 2);this.getLookup("???", "XXX", "IMP", (short) 8);this.getLookup("CPX", "CPX", "ZP0", (short) 3);this.getLookup("SBC", "SBC", "ZP0", (short) 3);this.getLookup("INC", "INC", "ZP0", (short) 5);this.getLookup("???", "XXX", "IMP", (short) 5);this.getLookup("INX", "INX", "IMP", (short) 2);this.getLookup("SBC", "SBC", "IMM", (short) 2);this.getLookup("NOP", "NOP", "IMP", (short) 2);this.getLookup("???", "SBC", "IMP", (short) 2);this.getLookup("CPX", "CPX", "ABS", (short) 4);this.getLookup("SBC", "SBC", "ABS", (short) 4);this.getLookup("INC", "INC", "ABS", (short) 6);this.getLookup("???", "XXX", "IMP", (short) 6);
         this.getLookup("BEQ", "BEQ", "REL", (short) 2);this.getLookup("SBC", "SBC", "IZY", (short) 5);this.getLookup("???", "XXX", "IMP", (short) 2);this.getLookup("???", "XXX", "IMP", (short) 8);this.getLookup("???", "NOP", "IMP", (short) 4);this.getLookup("SBC", "SBC", "ZPX", (short) 4);this.getLookup("INC", "INC", "ZPX", (short) 6);this.getLookup("???", "XXX", "IMP", (short) 6);this.getLookup("SED", "SED", "IMP", (short) 2);this.getLookup("SBC", "SBC", "ABY", (short) 4);this.getLookup("NOP", "NOP", "IMP", (short) 2);this.getLookup("???", "XXX", "IMP", (short) 7);this.getLookup("???", "NOP", "IMP", (short) 4);this.getLookup("SBC", "SBC", "ABX", (short) 4);this.getLookup("INC", "INC", "ABX", (short) 7);this.getLookup("???", "XXX", "IMP", (short) 7);
-
     }
 
     private void getLookup(String _name, String _operate, String _addrMode, short _cycles){
@@ -45,6 +44,7 @@ public class Olc6502 extends Olc6502A{
             this.pc++;
 
             INSTRUCTION instruction = lookupTable.get(opcode);
+//            System.out.println(String.format("%x", this.pc));
             this.cycles = instruction.cycles;
             short additional_cycle1 = 0, additional_cycle2 = 0;
 
@@ -71,20 +71,25 @@ public class Olc6502 extends Olc6502A{
         this.cycles--;
     }
 
+    public boolean complete()
+    {
+        return this.cycles == 0;
+    }
+
     @Override
     public void reset() {
+        this.addr_abs = 0xFFFC;
+        int lo = read(this.addr_abs + 0);
+        int hi = read(this.addr_abs + 1);
+
+        this.pc = (hi << 8) | lo;
+
         this.a = 0;
         this.x = 0;
         this.y = 0;
         this.stkp = 0xFD;
         this.status = 0x00;
         setFlag(FLAGS6502.U, true);
-
-        this.addr_abs = 0xFFFC;
-        int lo = read(this.addr_abs + 0);
-        int hi = read(this.addr_abs + 1);
-
-        this.pc = (hi << 8) | lo;
 
         this.addr_abs = 0x0000;
         this.addr_rel = 0x0000;

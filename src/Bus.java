@@ -10,11 +10,11 @@ public class Bus extends BusA{
     }
 
     @Override
-    public void cpuWrite(int addr, short data) {
+    public void cpuWrite(int addr, short data) {;
         if (cart.cpuWrite(addr, data)){
 
         }
-        else if (addr >= 0x0000 && addr <= 0xFFFF){
+        else if (addr >= 0x0000 && addr <= 0x1FFF){
             cpuRAM[addr & 0x07FF] = data;
         }
         else if (addr >= 0x2000 && addr <= 0x3FFF){
@@ -35,7 +35,7 @@ public class Bus extends BusA{
         if (cart.cpuRead(addr, cdata)){
             data = cdata[0];
         }
-        if (addr >= 0x0000 && addr <= 0x1FFF)
+        else if (addr >= 0x0000 && addr <= 0x1FFF)
         {
             data = cpuRAM[addr & 0x07FF];
         }
@@ -62,6 +62,10 @@ public class Bus extends BusA{
         ppu.clock();
         if (this.nSystemClockCounter % 3 == 0){
             cpu.clock();
+        }
+        if (this.ppu.nmi){
+            this.ppu.nmi = false;
+            this.cpu.nmi();
         }
         this.nSystemClockCounter++;
     }

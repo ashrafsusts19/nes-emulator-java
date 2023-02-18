@@ -13,8 +13,9 @@ public class Mapper_000 extends MapperA{
     }
 
     @Override
-    public boolean cpuMapWrite(int addr, long[] mapped_addr) {
-        if (addr >= 0x8000 && addr <= 0xFFFF){
+    public boolean cpuMapWrite(int addr, long[] mapped_addr, short data) {
+        if (addr >= 0x8000 && addr <= 0xFFFF)
+        {
             mapped_addr[0] = addr & (this.nPRGBanks > 1 ? 0x7FFF : 0x3FFF);
             return true;
         }

@@ -61,9 +61,11 @@ public class GameFrame extends JFrame implements ActionListener {
     boolean bEmulationRun = false;
     long fResidualTime = 0l;
     GamePanel gamePanel;
+    short nSelectedPalette = 0x00;
 
     GameFrame(){
         try {
+            //cart = new Cartridge("D:\\Projects\\Java\\nes-emulator-java\\Test Roms\\Super Mario Bros (E).nes");
             cart = new Cartridge("D:\\Projects\\Java\\nes-emulator-java\\Test Roms\\color_test.nes");
         } catch (IOException e) {
             e.printStackTrace();
@@ -132,6 +134,9 @@ public class GameFrame extends JFrame implements ActionListener {
         if (key == "SPACE"){
             this.bEmulationRun = !this.bEmulationRun;
             System.out.println(key);
+        }
+        if (key == "P"){
+            this.nSelectedPalette = (short) ((this.nSelectedPalette + 1) & 0x07);
         }
     }
 

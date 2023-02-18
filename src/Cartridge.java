@@ -40,6 +40,7 @@ public class Cartridge extends CartridgeA {
         cartFile.read(junk);
         Header headerData = new Header(header);
         this.nMapperID = (short) (((headerData.mapper2 >> 4) << 4) | (headerData.mapper1 >> 4));
+        this.mirror = (headerData.mapper1 & 0x01) > 0 ? MIRROR.VERTICAL : MIRROR.HORIZONTAL;
         short nFileType = 1;
         if (nFileType == 0){
 
@@ -97,7 +98,7 @@ public class Cartridge extends CartridgeA {
     @Override
     public boolean cpuWrite(int addr, short data) {
         long[] mapped_addr = new long[1];
-        if (pMapper.cpuMapWrite(addr, mapped_addr)){
+        if (pMapper.cpuMapWrite(addr, mapped_addr, data)){
             this.vPRGMemory[(int) mapped_addr[0]] = data;
             return true;
         }

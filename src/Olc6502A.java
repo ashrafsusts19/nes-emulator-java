@@ -42,6 +42,7 @@ public abstract class Olc6502A {
     public int stkp = 0x00;   // Stack pointer (Points to location on Bus)
     public int pc = 0x00;    // Program counter
 
+    public abstract boolean complete();
     public abstract void clock();   // Perform one clocke cycle's worth of update
     public abstract void reset();   // Reset interrupt, force cpu into known state
     public abstract void irq();     // Interrupt Request, executes an instruction at a specific location
@@ -55,6 +56,7 @@ public abstract class Olc6502A {
     public int addr_rel = 0x00;     // Relative location from the location where the instruction is called
     public int opcode = 0x00;       // Opcode currently working with
     public int cycles = 0;          // Variable to store the number of cycles left for the current instruction
+    public int clock_count = 0;
 
     public Bus bus;
 
