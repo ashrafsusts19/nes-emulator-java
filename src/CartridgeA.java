@@ -1,5 +1,3 @@
-import java.util.ArrayList;
-
 public abstract class CartridgeA {
     enum MIRROR {
         HORIZONTAL,
@@ -8,6 +6,7 @@ public abstract class CartridgeA {
         ONESCREEN_HI;
     }
 
+    boolean bImageValid = false;
     short nMapperID = 0;
     MIRROR mirror = MIRROR.HORIZONTAL;
     short nPRGBanks = 0;
@@ -23,4 +22,8 @@ public abstract class CartridgeA {
 
     public abstract boolean ppuRead(int addr, short[] data);
     public abstract boolean ppuWrite(int addr, short data);
+
+    public abstract boolean imageValid();
+
+    public abstract void reset();
 }

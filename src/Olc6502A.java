@@ -1,20 +1,19 @@
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.HashMap;
 
 public abstract class Olc6502A {
 
     public enum FLAGS6502{
-        C(1 << 0),  // Carry Bit
-        Z(1 << 1),  // Zero
-        I(1 << 2),  // Disable Interrupts
-        D(1 << 3),  // Decimal Mode
-        B(1 << 4),  // Break
-        U(1 << 5),  // Unused
-        V(1 << 6),  // Overflow
-        N(1 << 7);  // Negative
-        public final int bitNo;
-        FLAGS6502(int _bitNo){
+        C((short) (1 << 0)),  // Carry Bit
+        Z((short) (1 << 1)),  // Zero
+        I((short) (1 << 2)),  // Disable Interrupts
+        D((short) (1 << 3)),  // Decimal Mode
+        B((short) (1 << 4)),  // Break
+        U((short) (1 << 5)),  // Unused
+        V((short) (1 << 6)),  // Overflow
+        N((short) (1 << 7));  // Negative
+        public final short bitNo;
+        FLAGS6502(short _bitNo){
             this.bitNo = _bitNo;
         }
     }
@@ -35,11 +34,11 @@ public abstract class Olc6502A {
     public ArrayList<INSTRUCTION> lookupTable;
 //    public HashMap<Integer, String> disassemble(int nStart, int nStop);
 
-    public int status = 0x00; // Status register
-    public int a = 0x00;      // Accumulator register
-    public int x = 0x00;      // X register
-    public int y = 0x00;      // Y register
-    public int stkp = 0x00;   // Stack pointer (Points to location on Bus)
+    public short status = 0x00; // Status register
+    public short a = 0x00;      // Accumulator register
+    public short x = 0x00;      // X register
+    public short y = 0x00;      // Y register
+    public short stkp = 0x00;   // Stack pointer (Points to location on Bus)
     public int pc = 0x00;    // Program counter
 
     public abstract boolean complete();
@@ -48,26 +47,26 @@ public abstract class Olc6502A {
     public abstract void irq();     // Interrupt Request, executes an instruction at a specific location
     public abstract void nmi();     // Non maskable interrupt request, as above, can't be disabled
 
-    // Internal helper functions to facilitate the emulation
-
-    public abstract int fetch();    // Fetch data from appropriate source
-    public int fetched = 0x00;      // Store fetched value
-    public int addr_abs = 0x0000;   // Store absolute address
-    public int addr_rel = 0x00;     // Relative location from the location where the instruction is called
-    public int opcode = 0x00;       // Opcode currently working with
-    public int cycles = 0;          // Variable to store the number of cycles left for the current instruction
-    public int clock_count = 0;
-
-    public Bus bus;
-
     public void connectBus(Bus b){
         this.bus = b;
     }
+    // Internal helper functions to facilitate the emulation
+
+    public abstract short getFlag(FLAGS6502 f);
+    public abstract void setFlag(FLAGS6502 f, boolean v);
+
+    public abstract short fetch();    // Fetch data from appropriate source
+    public short fetched = 0x00;      // Store fetched value
+    public int addr_abs = 0x0000;   // Store absolute address
+    public int addr_rel = 0x00;     // Relative location from the location where the instruction is called
+    public short opcode = 0x00;       // Opcode currently working with
+    public short cycles = 0;          // Variable to store the number of cycles left for the current instruction
+    public long clock_count = 0;
+
+    public Bus bus;
 
     public abstract void write(int addr, short data);
     public abstract short read(int addr);
-    public abstract int getFlag(FLAGS6502 f);
-    public abstract void setFlag(FLAGS6502 f, boolean v);
 
     // Addressing Modes
     public abstract int IMP();	public abstract int IMM();

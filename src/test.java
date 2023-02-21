@@ -1,13 +1,33 @@
-import java.io.*;
-import java.util.Random;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 
 //Use short (2 bytes, 16-bit) instead of uint8 (1 byte)
 //Use int (4 bytes, 32-bit) instead of uint16 (2 Byte)
 // 0xFF : one byte
 public class test {
+
+
+    public static short flipbyte(short b)
+    {
+        short c = 0;
+        for (int i = 0; i < 8; i++){
+            if ((b & (1 << i)) > 0){
+                c |= (1 << (7 - i));
+            }
+        }
+        return c;
+    }
     public static void main(String[] args) {
+//        short a = 0b01101001;
+//        System.out.println(String.format("%x", a));
+//        a = flipbyte(a);
+//        System.out.println(String.format("%x", a));
+
         GameFrame gameFrame = new GameFrame();
     }
+
     public static void file_stuff(){
         String file_path = "D:\\Projects\\Java\\nes-emulator-java\\src\\Fire Emblem Gaiden (J) [T-Eng97b].nes";
         byte[] name = new byte[4];

@@ -36,14 +36,18 @@ public class Olc6502 extends Olc6502A{
     private int ushort(int a){
         return a & 0xFFFF;
     }
+    private short ubyte (short a){
+        return (short) (a & 0xFF);
+    }
 
     @Override
     public void clock() {
         if (this.cycles == 0){
-            this.opcode = read(this.pc);
-            this.pc++;
-
+            this.opcode = ubyte(read(this.pc));
+            this.setFlag(FLAGS6502.U, true);
+            this.pc = ushort(this.pc + 1);
             INSTRUCTION instruction = lookupTable.get(opcode);
+//            System.out.println(opcode + " " + instruction.addrMode.getName() + " " + instruction.operate.getName());
 //            System.out.println(String.format("%x", this.pc));
             this.cycles = instruction.cycles;
             short additional_cycle1 = 0, additional_cycle2 = 0;
@@ -64,11 +68,12 @@ public class Olc6502 extends Olc6502A{
             } catch (InvocationTargetException e) {
                 e.printStackTrace();
             }
-            if ((additional_cycle1 & additional_cycle2) > 0){
-                this.cycles += additional_cycle1 & additional_cycle2;
-            }
+
+            this.cycles += additional_cycle1 & additional_cycle2;
+            this.setFlag(FLAGS6502.U, true);
         }
-        this.cycles--;
+        this.clock_count++;
+        this.cycles = ubyte((short) (this.cycles - 1));
     }
 
     public boolean complete()
@@ -76,13 +81,26 @@ public class Olc6502 extends Olc6502A{
         return this.cycles == 0;
     }
 
+    public short getFlag(FLAGS6502 f){
+        return (short) ((this.status & f.bitNo) > 0 ? 1: 0);
+    }
+
+    public void setFlag(FLAGS6502 f, boolean v){
+        if (v){
+            this.status |= f.bitNo;
+        }
+        else {
+            this.status &= (~f.bitNo);
+        }
+    }
+
     @Override
     public void reset() {
         this.addr_abs = 0xFFFC;
-        int lo = read(this.addr_abs + 0);
-        int hi = read(this.addr_abs + 1);
+        int lo = ushort(read(this.addr_abs + 0));
+        int hi = ushort(read(this.addr_abs + 1));
 
-        this.pc = (hi << 8) | lo;
+        this.pc = ushort((hi << 8) | lo);
 
         this.a = 0;
         this.x = 0;
@@ -102,20 +120,20 @@ public class Olc6502 extends Olc6502A{
     public void irq() {
         if (getFlag(FLAGS6502.I) == 0){
             write(0x0100 + this.stkp, (short) ((this.pc >> 8) & 0x00FF));
-            this.stkp--;
+            this.stkp = ubyte(--this.stkp);
             write(0x0100 + this.stkp, (short) (this.pc & 0x00FF));
-            this.stkp--;
+            this.stkp = ubyte(--this.stkp);
 
             setFlag(FLAGS6502.B, false);
             setFlag(FLAGS6502.U, true);
             setFlag(FLAGS6502.I, true);
-            write(0x0100 + this.stkp, (short) status);
-            this.stkp--;
+            write(0x0100 + this.stkp, status);
+            this.stkp = ubyte(--this.stkp);
 
             this.addr_abs = 0xFFFE;
             int lo = read(this.addr_abs + 0);
             int hi = read(this.addr_abs + 1);
-            this.pc = (hi << 8) | lo;
+            this.pc = ushort((hi << 8) | lo);
 
             this.cycles = 7;
         }
@@ -124,53 +142,45 @@ public class Olc6502 extends Olc6502A{
     @Override
     public void nmi() {
         write(0x0100 + this.stkp, (short) ((this.pc >> 8) & 0x00FF));
-        this.stkp--;
+        this.stkp = ubyte(--this.stkp);
         write(0x0100 + this.stkp, (short) (this.pc & 0x00FF));
-        this.stkp--;
+        this.stkp = ubyte(--this.stkp);
 
         setFlag(FLAGS6502.B, false);
         setFlag(FLAGS6502.U, true);
         setFlag(FLAGS6502.I, true);
-        write(0x0100 + this.stkp, (short) status);
-        this.stkp--;
+        write(0x0100 + this.stkp, status);
+        this.stkp = ubyte(--this.stkp);
 
         this.addr_abs = 0xFFFA;
-        int lo = read(this.addr_abs + 0);
-        int hi = read(this.addr_abs + 1);
-        this.pc = (hi << 8) | lo;
+        int lo = ushort(read(this.addr_abs + 0));
+        int hi = ushort(read(this.addr_abs + 1));
+        this.pc = ushort((hi << 8) | lo);
 
         this.cycles = 8;
     }
 
     @Override
-    public int fetch() {
+    public short fetch() {
         if (!(lookupTable.get(opcode).addrMode.getName() == "IMP"))
-            this.fetched = read(this.addr_abs);
+            this.fetched = ubyte(read(this.addr_abs));
         return this.fetched;
     }
 
     @Override
     public void write(int addr, short data) {
+        addr = ushort(addr);
+        data = ubyte(data);
         bus.cpuWrite(addr, data);
     }
 
     @Override
     public short read(int addr) {
-        return bus.cpuRead(addr, false);
+        addr = ushort(addr);
+        return ubyte(bus.cpuRead(addr, false));
     }
 
-    public int getFlag(FLAGS6502 f){
-        return this.status & f.bitNo;
-    }
 
-    public void setFlag(FLAGS6502 f, boolean v){
-        if (v){
-            this.status |= f.bitNo;
-        }
-        else {
-            this.status &= ~(f.bitNo);
-        }
-    }
 
     @Override
     public int IMP() {
@@ -180,38 +190,39 @@ public class Olc6502 extends Olc6502A{
 
     @Override
     public int IMM() {
-        this.addr_abs = this.pc++;
+        this.addr_abs = this.pc;
+        this.pc = ushort(this.pc + 1);
         return 0;
     }
 
     @Override
     public int ZP0() {
-        this.addr_abs = read(this.pc);
-        this.pc++;
+        this.addr_abs = ushort(read(this.pc));
+        this.pc = ushort(this.pc + 1);
         this.addr_abs &= 0x00FF;
         return 0;
     }
 
     @Override
     public int ZPX() {
-        this.addr_abs = (read(this.pc) + this.x);
-        this.pc++;
+        this.addr_abs = ushort(read(this.pc) + this.x);
+        this.pc = ushort(this.pc + 1);
         this.addr_abs &= 0x00FF;
         return 0;
     }
 
     @Override
     public int ZPY() {
-        this.addr_abs = (read(this.pc) + this.y);
-        this.pc++;
+        this.addr_abs = ushort(read(this.pc) + this.y);
+        this.pc = ushort(this.pc + 1);
         this.addr_abs &= 0x00FF;
         return 0;
     }
 
     @Override
     public int REL() {
-        this.addr_rel = read(this.pc);
-        this.pc++;
+        this.addr_rel = ushort(read(this.pc));
+        this.pc = ushort(this.pc + 1);
         if ((this.addr_rel & 0x80) > 0){
             this.addr_rel |= 0xFF00;
         }
@@ -221,22 +232,22 @@ public class Olc6502 extends Olc6502A{
     @Override
     public int ABS() {
         int lo = read(this.pc);
-        this.pc++;
+        this.pc = ushort(this.pc + 1);
         int hi = read(this.pc);
-        this.pc++;
-        this.addr_abs = (hi << 8) | lo;
+        this.pc = ushort(this.pc + 1);
+        this.addr_abs = ushort((hi << 8) | lo);
         return 0;
     }
 
     @Override
     public int ABX() {
         int lo = read(this.pc);
-        this.pc++;
+        this.pc = ushort(this.pc + 1);
         int hi = read(this.pc);
-        this.pc++;
+        this.pc = ushort(this.pc + 1);
 
-        this.addr_abs = (hi << 8) | lo;
-        this.addr_abs += this.x;
+        this.addr_abs = ushort((hi << 8) | lo);
+        this.addr_abs = ushort(this.addr_abs + this.x);
         if ((this.addr_abs & 0xFF00) != (hi << 8)){
             return 1;
         }
@@ -248,11 +259,11 @@ public class Olc6502 extends Olc6502A{
     @Override
     public int ABY() {
         int lo = read(this.pc);
-        this.pc++;
+        this.pc = ushort(this.pc + 1);
         int hi = read(this.pc);
-        this.pc++;
-        this.addr_abs = (hi << 8) | lo;
-        this.addr_abs += this.y;
+        this.pc = ushort(this.pc + 1);
+        this.addr_abs = ushort((hi << 8) | lo);
+        this.addr_abs = ushort(this.addr_abs + this.y);
         if ((this.addr_abs & 0xFF00) != (hi << 8)){
             return 1;
         }
@@ -264,15 +275,15 @@ public class Olc6502 extends Olc6502A{
     @Override
     public int IND() {
         int ptr_lo = read(this.pc);
-        this.pc++;
+        this.pc = ushort(this.pc + 1);
         int ptr_hi = read(this.pc);
-        this.pc++;
+        this.pc = ushort(this.pc + 1);
         int ptr = (ptr_hi << 8) | ptr_lo;
         if (ptr_lo == 0x00FF){
-            this.addr_abs = (read(ptr & 0xFF00) << 8) | read(ptr + 0);
+            this.addr_abs = ushort((read(ptr & 0xFF00) << 8) | read(ptr + 0));
         }
         else {
-            this.addr_abs = (read(ptr + 1) << 8) | (read(ptr + 0));
+            this.addr_abs = ushort((read(ptr + 1) << 8) | (read(ptr + 0)));
         }
         return 0;
     }
@@ -280,23 +291,23 @@ public class Olc6502 extends Olc6502A{
     @Override
     public int IZX() {
         int t = read(this.pc);
-        this.pc++;
+        this.pc = ushort(this.pc + 1);
         int lo = read(ushort((t + ushort(this.x))) & 0x00FF);
         int hi = read(ushort((t + ushort(this.x) + 1)) & 0x00FF);
-        this.addr_abs = (hi << 8) | lo;
+        this.addr_abs = ushort((hi << 8) | lo);
         return 0;
     }
 
     @Override
     public int IZY() {
         int t = read(this.pc);
-        this.pc++;
+        this.pc = ushort(this.pc + 1);
 
         int lo = read(t & 0x00FF);
         int hi = read((t + 1) & 0x00FF);
 
-        this.addr_abs = (hi << 8) | lo;
-        this.addr_abs += this.y;
+        this.addr_abs = ushort((hi << 8) | lo);
+        this.addr_abs = ushort(this.addr_abs + this.y);
 
         if ((this.addr_abs & 0xFF00) != (hi << 8)){
             return 1;
@@ -309,20 +320,20 @@ public class Olc6502 extends Olc6502A{
     @Override
     public int ADC() {
         fetch();
-        int temp = ushort(this.a) + ushort(this.fetched) + ushort(getFlag(FLAGS6502.C));
+        int temp = ushort(ushort(this.a) + ushort(this.fetched) + ushort(getFlag(FLAGS6502.C)));
         setFlag(FLAGS6502.C, temp > 255);
         setFlag(FLAGS6502.Z, (temp & 0x00FF) == 0);
         setFlag(FLAGS6502.N, (temp & 0x80) > 0);
         setFlag(FLAGS6502.V, ((~(ushort(this.a) ^ ushort(this.fetched)) & (ushort(this.a) ^ ushort(temp))) & 0x0080) > 0);
 //        SetFlag(V, (~((uint16_t)a ^ (uint16_t)fetched) & ((uint16_t)a ^ (uint16_t)temp)) & 0x0080);
-        this.a = temp & 0x00FF;
+        this.a = ubyte((short) (temp & 0x00FF));
         return 1;
     }
 
     @Override
     public int AND() {
         this.fetch();
-        this.a = this.a & this.fetched;
+        this.a = ubyte((short) (this.a & this.fetched));
         this.setFlag(FLAGS6502.Z, a == 0x00);
         this.setFlag(FLAGS6502.N, (a & 0x80) > 0);
         return 1;
@@ -331,13 +342,13 @@ public class Olc6502 extends Olc6502A{
     @Override
     public int ASL() {
         this.fetch();
-        int temp = ushort(fetched) << 1;
+        int temp = ushort(fetched << 1);
         setFlag(FLAGS6502.C, (temp & 0xFF00) > 0);
         setFlag(FLAGS6502.Z, (temp & 0x00FF) == 0x00);
         setFlag(FLAGS6502.N, (temp & 0x80) > 0);
 //        if (lookup[opcode].addrmode == &olc6502::IMP)
         if (lookupTable.get(this.opcode).addrMode.getName() == "IMP")
-            this.a = temp & 0x00FF;
+            this.a = ubyte((short) (temp & 0x00FF));
         else
             write(addr_abs, (short) (temp & 0x00FF));
         return 0;
@@ -346,10 +357,10 @@ public class Olc6502 extends Olc6502A{
     @Override
     public int BCC() {
         if (getFlag(FLAGS6502.C) == 0) {
-            this.cycles++;
-            this.addr_abs = this.pc + this.addr_rel;
+            this.cycles = ubyte((short) (this.cycles + 1));
+            this.addr_abs = ushort(this.pc + this.addr_rel);
             if ((this.addr_abs & 0xFF00) != (this.pc & 0xFF00)) {
-                this.cycles++;
+                this.cycles = ubyte((short) (this.cycles + 1));
             }
             this.pc = this.addr_abs;
         }
@@ -359,10 +370,10 @@ public class Olc6502 extends Olc6502A{
     @Override
     public int BCS() {
         if (getFlag(FLAGS6502.C) == 1){
-            this.cycles++;
-            this.addr_abs = this.pc + this.addr_rel;
+            this.cycles = ubyte((short) (this.cycles + 1));
+            this.addr_abs = ushort(this.pc + this.addr_rel);
             if ((this.addr_abs & 0xFF00) != (this.pc & 0xFF00)){
-                this.cycles++;
+                this.cycles = ubyte((short) (this.cycles + 1));
             }
             this.pc = this.addr_abs;
         }
@@ -372,10 +383,10 @@ public class Olc6502 extends Olc6502A{
     @Override
     public int BEQ() {
         if (getFlag(FLAGS6502.Z) == 1) {
-            this.cycles++;
-            this.addr_abs = this.pc + this.addr_rel;
+            this.cycles = ubyte((short) (this.cycles + 1));
+            this.addr_abs = ushort(this.pc + this.addr_rel);
             if ((this.addr_abs & 0xFF00) != (this.pc & 0xFF00)) {
-                this.cycles++;
+                this.cycles = ubyte((short) (this.cycles + 1));
             }
             this.pc = this.addr_abs;
         }
@@ -385,7 +396,7 @@ public class Olc6502 extends Olc6502A{
     @Override
     public int BIT() {
         this.fetch();
-        int temp = a & fetched;
+        int temp = ushort(a & fetched);
         setFlag(FLAGS6502.Z, (temp & 0x00FF) == 0x00);
         setFlag(FLAGS6502.N, (fetched & (1 << 7)) > 0);
         setFlag(FLAGS6502.V, (fetched & (1 << 6)) > 0);
@@ -395,10 +406,10 @@ public class Olc6502 extends Olc6502A{
     @Override
     public int BMI() {
         if (getFlag(FLAGS6502.N) == 1) {
-            this.cycles++;
-            this.addr_abs = this.pc + this.addr_rel;
+            this.cycles = ubyte((short) (this.cycles + 1));
+            this.addr_abs = ushort(this.pc + this.addr_rel);
             if ((this.addr_abs & 0xFF00) != (this.pc & 0xFF00)) {
-                this.cycles++;
+                this.cycles = ubyte((short) (this.cycles + 1));
             }
             this.pc = this.addr_abs;
         }
@@ -408,10 +419,10 @@ public class Olc6502 extends Olc6502A{
     @Override
     public int BNE() {
         if (getFlag(FLAGS6502.Z) == 0) {
-            this.cycles++;
-            this.addr_abs = this.pc + this.addr_rel;
+            this.cycles = ubyte((short) (this.cycles + 1));
+            this.addr_abs = ushort(this.pc + this.addr_rel);
             if ((this.addr_abs & 0xFF00) != (this.pc & 0xFF00)) {
-                this.cycles++;
+                this.cycles = ubyte((short) (this.cycles + 1));
             }
             this.pc = this.addr_abs;
         }
@@ -421,10 +432,10 @@ public class Olc6502 extends Olc6502A{
     @Override
     public int BPL() {
         if (getFlag(FLAGS6502.N) == 0) {
-            this.cycles++;
-            this.addr_abs = this.pc + this.addr_rel;
+            this.cycles = ubyte((short) (this.cycles + 1));
+            this.addr_abs = ushort(this.pc + this.addr_rel);
             if ((this.addr_abs & 0xFF00) != (this.pc & 0xFF00)) {
-                this.cycles++;
+                this.cycles = ubyte((short) (this.cycles + 1));
             }
             this.pc = this.addr_abs;
         }
@@ -433,30 +444,30 @@ public class Olc6502 extends Olc6502A{
 
     @Override
     public int BRK() {
-        this.pc++;
+        this.pc = ushort(this.pc + 1);
 
         setFlag(FLAGS6502.I, true);
         write(0x0100 + stkp, (short) ((pc >> 8) & 0x00FF));
-        this.stkp--;
+        this.stkp = ubyte((short) (this.stkp - 1));
         write(0x0100 + stkp, (short) (pc & 0x00FF));
-        this.stkp--;
+        this.stkp = ubyte((short) (this.stkp - 1));
 
         setFlag(FLAGS6502.B, true);
         write(0x0100 + stkp, (short) this.status);
-        this.stkp--;
+        this.stkp = ubyte((short) (this.stkp - 1));
         setFlag(FLAGS6502.B, false);
 
-        this.pc = ushort(read(0xFFFE)) | (ushort(read(0xFFFF) << 8));
+        this.pc = ushort(ushort(read(0xFFFE)) | (ushort(read(0xFFFF) << 8)));
         return 0;
     }
 
     @Override
     public int BVC() {
         if (getFlag(FLAGS6502.V) == 0) {
-            this.cycles++;
-            this.addr_abs = this.pc + this.addr_rel;
+            this.cycles = ubyte((short) (this.cycles + 1));
+            this.addr_abs = ushort(this.pc + this.addr_rel);
             if ((this.addr_abs & 0xFF00) != (this.pc & 0xFF00)) {
-                this.cycles++;
+                this.cycles = ubyte((short) (this.cycles + 1));
             }
             this.pc = this.addr_abs;
         }
@@ -466,10 +477,10 @@ public class Olc6502 extends Olc6502A{
     @Override
     public int BVS() {
         if (getFlag(FLAGS6502.V) == 1) {
-            this.cycles++;
-            this.addr_abs = this.pc + this.addr_rel;
+            this.cycles = ubyte((short) (this.cycles + 1));
+            this.addr_abs = ushort(this.pc + this.addr_rel);
             if ((this.addr_abs & 0xFF00) != (this.pc & 0xFF00)) {
-                this.cycles++;
+                this.cycles = ubyte((short) (this.cycles + 1));
             }
             this.pc = this.addr_abs;
         }
@@ -503,7 +514,7 @@ public class Olc6502 extends Olc6502A{
     @Override
     public int CMP() {
         this.fetch();
-        int temp = ushort(this.a) - ushort(this.fetched);
+        int temp = ushort(ushort(this.a) - ushort(this.fetched));
         setFlag(FLAGS6502.C, a >= this.fetched);
         setFlag(FLAGS6502.Z, (temp & 0x00FF) == 0x0000);
         setFlag(FLAGS6502.N, (temp & 0x0080) > 0);
@@ -513,7 +524,7 @@ public class Olc6502 extends Olc6502A{
     @Override
     public int CPX() {
         this.fetch();
-        int temp = ushort(this.x) - ushort(this.fetched);
+        int temp = ushort(ushort(this.x) - ushort(this.fetched));
         setFlag(FLAGS6502.C, x >= this.fetched);
         setFlag(FLAGS6502.Z, (temp & 0x00FF) == 0x0000);
         setFlag(FLAGS6502.N, (temp & 0x0080) > 0);
@@ -523,7 +534,7 @@ public class Olc6502 extends Olc6502A{
     @Override
     public int CPY() {
         this.fetch();
-        int temp = ushort(this.y) - ushort(this.fetched);
+        int temp = ushort(ushort(this.y) - ushort(this.fetched));
         setFlag(FLAGS6502.C, this.y >= fetched);
         setFlag(FLAGS6502.Z, (temp & 0x00FF) == 0x0000);
         setFlag(FLAGS6502.N, (temp & 0x0080) > 0);
@@ -533,7 +544,7 @@ public class Olc6502 extends Olc6502A{
     @Override
     public int DEC() {
         this.fetch();
-        int temp = this.fetched - 1;
+        int temp = ushort(this.fetched - 1);
         write(this.addr_abs, (short) (temp & 0x00FF));
         setFlag(FLAGS6502.Z, (temp & 0x00FF) == 0x0000);
         setFlag(FLAGS6502.N, (temp & 0x0080) > 0);
@@ -542,7 +553,7 @@ public class Olc6502 extends Olc6502A{
 
     @Override
     public int DEX() {
-        this.x--;
+        this.x = ubyte((short) (this.x - 1));
         setFlag(FLAGS6502.Z, this.x == 0x00);
         setFlag(FLAGS6502.N, (this.x & 0x80) > 0);
         return 0;
@@ -550,7 +561,7 @@ public class Olc6502 extends Olc6502A{
 
     @Override
     public int DEY() {
-        this.y--;
+        this.y = ubyte((short) (this.y - 1));
         setFlag(FLAGS6502.Z, y == 0x00);
         setFlag(FLAGS6502.N, (y & 0x80) > 0);
         return 0;
@@ -559,7 +570,7 @@ public class Olc6502 extends Olc6502A{
     @Override
     public int EOR() {
         this.fetch();
-        this.a = this.a ^ this.fetched;
+        this.a = ubyte((short) (this.a ^ this.fetched));
         setFlag(FLAGS6502.Z, this.a == 0x00);
         setFlag(FLAGS6502.N, (this.a & 0x80) > 0);
         return 1;
@@ -568,7 +579,7 @@ public class Olc6502 extends Olc6502A{
     @Override
     public int INC() {
         this.fetch();
-        int temp = this.fetched + 1;
+        int temp = ushort(this.fetched + 1);
         write(this.addr_abs, (short) (temp & 0x00FF));
         setFlag(FLAGS6502.Z, (temp & 0x00FF) == 0x0000);
         setFlag(FLAGS6502.N, (temp & 0x0080) > 0);
@@ -577,7 +588,7 @@ public class Olc6502 extends Olc6502A{
 
     @Override
     public int INX() {
-        this.x++;
+        this.x = ubyte((short) (this.x + 1));
         setFlag(FLAGS6502.Z, this.x == 0x00);
         setFlag(FLAGS6502.N, (this.x & 0x80) > 0);
         return 0;
@@ -585,7 +596,7 @@ public class Olc6502 extends Olc6502A{
 
     @Override
     public int INY() {
-        this.y++;
+        this.y = ubyte((short) (this.y + 1));
         setFlag(FLAGS6502.Z, y == 0x00);
         setFlag(FLAGS6502.N, (y & 0x80) > 0);
         return 0;
@@ -599,12 +610,12 @@ public class Olc6502 extends Olc6502A{
 
     @Override
     public int JSR() {
-        this.pc--;
+        this.pc = ushort(this.pc - 1);
 
         write(0x0100 + this.stkp, (short) ((this.pc >> 8) & 0x00FF));
-        this.stkp--;
+        this.stkp = ubyte((short) (this.stkp - 1));
         write(0x0100 + this.stkp, (short) (this.pc & 0x00FF));
-        this.stkp--;
+        this.stkp = ubyte((short) (this.stkp - 1));
 
         this.pc = this.addr_abs;
         return 0;
@@ -641,12 +652,12 @@ public class Olc6502 extends Olc6502A{
     public int LSR() {
         this.fetch();
         setFlag(FLAGS6502.C, (fetched & 0x0001) > 0);
-        int temp = this.fetched >> 1;
+        int temp = ushort(this.fetched >> 1);
         setFlag(FLAGS6502.Z, (temp & 0x00FF) == 0x0000);
         setFlag(FLAGS6502.N, (temp & 0x0080) > 0);
         // if (lookup[opcode].addrmode == &olc6502::IMP)
         if (lookupTable.get(opcode).addrMode.getName() == "IMP")
-            this.a = temp & 0x00FF;
+            this.a = ubyte((short) (temp & 0x00FF));
         else
             write(this.addr_abs, (short) (temp & 0x00FF));
         return 0;
@@ -669,7 +680,7 @@ public class Olc6502 extends Olc6502A{
     @Override
     public int ORA() {
         this.fetch();
-        this.a = this.a | this.fetched;
+        this.a = ubyte((short) (this.a | this.fetched));
         setFlag(FLAGS6502.Z, this.a == 0x00);
         setFlag(FLAGS6502.N, (this.a & 0x80) > 0);
         return 1;
@@ -678,7 +689,7 @@ public class Olc6502 extends Olc6502A{
     @Override
     public int PHA() {
         write(0x0100 + this.stkp, (short) this.a);
-        this.stkp--;
+        this.stkp = ubyte((short)(this.stkp - 1));
         return 0;
     }
 
@@ -687,13 +698,13 @@ public class Olc6502 extends Olc6502A{
         write(0x0100 + this.stkp, (short) (this.status | FLAGS6502.B.bitNo | FLAGS6502.U.bitNo));
         setFlag(FLAGS6502.B, false);
         setFlag(FLAGS6502.U, false);
-        this.stkp--;
+        this.stkp = ubyte((short) (this.stkp - 1));
         return 0;
     }
 
     @Override
     public int PLA() {
-        this.stkp++;
+        this.stkp = ubyte((short) (this.stkp + 1));
         this.a = read(0x0100 + stkp);
         setFlag(FLAGS6502.Z, a == 0x00);
         setFlag(FLAGS6502.N, (a & 0x80) > 0);
@@ -702,7 +713,7 @@ public class Olc6502 extends Olc6502A{
 
     @Override
     public int PLP() {
-        this.stkp++;
+        this.stkp = ubyte((short) (this.stkp + 1));;
         this.status = read(0x0100 + this.stkp);
         setFlag(FLAGS6502.U, true);
         return 0;
@@ -711,13 +722,13 @@ public class Olc6502 extends Olc6502A{
     @Override
     public int ROL() {
         this.fetch();
-        int temp = ushort((fetched << 1)) | getFlag(FLAGS6502.C);
+        int temp = ushort(ushort((fetched << 1)) | getFlag(FLAGS6502.C));
         setFlag(FLAGS6502.C, (temp & 0xFF00) > 0);
         setFlag(FLAGS6502.Z, (temp & 0x00FF) == 0x0000);
         setFlag(FLAGS6502.N, (temp & 0x0080) > 0);
         // if (lookup[opcode].addrmode == &olc6502::IMP)
         if (lookupTable.get(opcode).addrMode.getName() == "IMP")
-            this.a = temp & 0x00FF;
+            this.a = ubyte((short) (temp & 0x00FF));
         else
             write(this.addr_abs, (short) (temp & 0x00FF));
         return 0;
@@ -726,13 +737,13 @@ public class Olc6502 extends Olc6502A{
     @Override
     public int ROR() {
         this.fetch();
-        int temp = ushort(getFlag(FLAGS6502.C) << 7) | (this.fetched >> 1);
+        int temp = ushort(ushort(getFlag(FLAGS6502.C) << 7) | (this.fetched >> 1));
         setFlag(FLAGS6502.C, (this.fetched & 0x01) > 0);
         setFlag(FLAGS6502.Z, (temp & 0x00FF) == 0x00);
         setFlag(FLAGS6502.N, (temp & 0x0080) > 0);
         // if (lookup[opcode].addrmode == &olc6502::IMP)
         if (lookupTable.get(opcode).addrMode.getName() == "IMP")
-            this.a = temp & 0x00FF;
+            this.a = ubyte((short) (temp & 0x00FF));
         else
             write(this.addr_abs, (short) (temp & 0x00FF));
         return 0;
@@ -740,26 +751,26 @@ public class Olc6502 extends Olc6502A{
 
     @Override
     public int RTI() {
-        this.stkp++;
+        this.stkp = ubyte((short) (this.stkp + 1));
         this.status = read(0x0100 + this.stkp);
         this.status &= ~(1 << 4);
         this.status &= ~(1 << 5);
 
-        this.stkp++;
+        this.stkp = ubyte((short) (this.stkp + 1));
         this.pc = ushort(read(0x0100 + this.stkp));
-        this.stkp++;
+        this.stkp = ubyte((short) (this.stkp + 1));
         this.pc |= ushort(read(0x0100 + this.stkp)) << 8;
         return 0;
     }
 
     @Override
     public int RTS() {
-        this.stkp++;
+        this.stkp = ubyte((short) (this.stkp + 1));
         this.pc = ushort(read(0x0100 + stkp));
-        this.stkp++;
+        this.stkp = ubyte((short) (this.stkp + 1));
         this.pc |= ushort(read(0x0100 + stkp)) << 8;
 
-        this.pc++;
+        this.pc = ushort((this.pc + 1));
         return 0;
     }
 
@@ -768,13 +779,13 @@ public class Olc6502 extends Olc6502A{
         fetch();
 
         int value = (ushort(this.fetched)) ^ 0x00FF;
-        int temp = ushort(this.a) + value + ushort(getFlag(FLAGS6502.C));
+        int temp =ushort(ushort(this.a) + value + ushort(getFlag(FLAGS6502.C)));
         setFlag(FLAGS6502.C, (temp & 0xFF00) > 0);
         setFlag(FLAGS6502.Z, (temp & 0x00FF) == 0);
         setFlag(FLAGS6502.N, (temp & 0x0080) > 0);
         setFlag(FLAGS6502.V, ((temp ^ ushort(this.a)) & (temp ^ value) & 0x0080) > 0);
 //        SetFlag(V, (~((uint16_t)a ^ (uint16_t)fetched) & ((uint16_t)a ^ (uint16_t)temp)) & 0x0080);
-        this.a = temp & 0x00FF;
+        this.a = ubyte((short) (temp & 0x00FF));
         return 1;
     }
 

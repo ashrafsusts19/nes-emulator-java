@@ -1,9 +1,6 @@
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
 
 public class Cartridge extends CartridgeA {
     private class Header {
@@ -33,13 +30,16 @@ public class Cartridge extends CartridgeA {
     }
 
     public Cartridge(String sFileName) throws IOException {
+        this.bImageValid = false;
         byte[] header = new byte[16];
         byte[] junk = new byte[512];
         InputStream cartFile = new FileInputStream(sFileName);
         cartFile.read(header);
-        cartFile.read(junk);
         Header headerData = new Header(header);
-        this.nMapperID = (short) (((headerData.mapper2 >> 4) << 4) | (headerData.mapper1 >> 4));
+        if ((headerData.mapper1 & 0x04) > 0){
+            cartFile.read(junk);
+        }
+        this.nMapperID = ubyte((short) (((headerData.mapper2 >> 4) << 4) | (headerData.mapper1 >> 4)));
         this.mirror = (headerData.mapper1 & 0x01) > 0 ? MIRROR.VERTICAL : MIRROR.HORIZONTAL;
         short nFileType = 1;
         if (nFileType == 0){
@@ -55,7 +55,13 @@ public class Cartridge extends CartridgeA {
             }
 
             this.nCHRBanks = headerData.chr_rom_chunks;
-            this.vCHRMemory = new short[this.nCHRBanks * 8192];
+            if (nCHRBanks == 0)
+            {
+                this.vCHRMemory = new short[8192];
+            }
+            else {
+                this.vCHRMemory = new short[this.nCHRBanks * 8192];
+            }
             byte[] vCHRMtemp = new byte[this.vCHRMemory.length];
             cartFile.read(vCHRMtemp);
             for (int i = 0; i < this.vCHRMemory.length; i++){
@@ -74,6 +80,7 @@ public class Cartridge extends CartridgeA {
             //System.out.println(String.format("%x", (short) (0xFF & header[i])));
 
         }
+
         switch (this.nMapperID){
             case 0:
                 pMapper = new Mapper_000(this.nPRGBanks, this.nCHRBanks);
@@ -81,12 +88,20 @@ public class Cartridge extends CartridgeA {
                 //pMapper = new Mapper_000(this.nPRGBanks, this.nCHRBanks);
                 break;
         }
-
+        bImageValid = true;
         cartFile.close();
+    }
+
+    private int ushort(int a){
+        return a & 0xFFFF;
+    }
+    private short ubyte (short a){
+        return (short) (a & 0xFF);
     }
 
     @Override
     public boolean cpuRead(int addr, short[] data) {
+        addr = ushort(addr);
         long[] mapped_addr = new long[1];
         if (pMapper.cpuMapRead(addr, mapped_addr)){
             data[0] = this.vPRGMemory[(int) mapped_addr[0]];
@@ -97,6 +112,8 @@ public class Cartridge extends CartridgeA {
 
     @Override
     public boolean cpuWrite(int addr, short data) {
+        addr = ushort(addr);
+        data = ubyte(data);
         long[] mapped_addr = new long[1];
         if (pMapper.cpuMapWrite(addr, mapped_addr, data)){
             this.vPRGMemory[(int) mapped_addr[0]] = data;
@@ -107,6 +124,7 @@ public class Cartridge extends CartridgeA {
 
     @Override
     public boolean ppuRead(int addr, short[] data) {
+        addr = ushort(addr);
         long[] mapped_addr = new long[1];
         if (pMapper.ppuMapRead(addr, mapped_addr))
         {
@@ -118,11 +136,23 @@ public class Cartridge extends CartridgeA {
 
     @Override
     public boolean ppuWrite(int addr, short data) {
+        addr = ushort(addr);
+        data = ubyte(data);
         long[] mapped_addr = new long[1];
         if (pMapper.ppuMapWrite(addr, mapped_addr)){
             this.vCHRMemory[(int) mapped_addr[0]] = data;
             return true;
         }
         return false;
+    }
+
+    @Override
+    public boolean imageValid() {
+        return this.bImageValid;
+    }
+
+    @Override
+    public void reset() {
+
     }
 }

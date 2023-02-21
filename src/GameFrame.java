@@ -4,10 +4,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.io.*;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
+import java.io.IOException;
 
 public class GameFrame extends JFrame implements ActionListener {
     public class MyKeyAdapter extends KeyAdapter {
@@ -16,6 +13,36 @@ public class GameFrame extends JFrame implements ActionListener {
             super();
             mainGame = _mainGame;
         }
+        @Override
+        public void keyReleased(KeyEvent e){
+            switch (e.getKeyCode()){
+                case KeyEvent.VK_UP:
+                    mainGame.keyReleased("UP");
+                    break;
+                case KeyEvent.VK_DOWN:
+                    mainGame.keyReleased("DOWN");
+                    break;
+                case KeyEvent.VK_LEFT:
+                    mainGame.keyReleased("LEFT");
+                    break;
+                case KeyEvent.VK_RIGHT:
+                    mainGame.keyReleased("RIGHT");
+                    break;
+                case KeyEvent.VK_A:
+                    mainGame.keyReleased("A");
+                    break;
+                case KeyEvent.VK_S:
+                    mainGame.keyReleased("S");
+                    break;
+                case KeyEvent.VK_Q:
+                    mainGame.keyReleased("Q");
+                    break;
+                case KeyEvent.VK_W:
+                    mainGame.keyReleased("W");
+                    break;
+            }
+        }
+
         @Override
         public void keyPressed(KeyEvent e){
             switch (e.getKeyCode()){
@@ -45,8 +72,21 @@ public class GameFrame extends JFrame implements ActionListener {
                     break;
                 case KeyEvent.VK_R:
                     mainGame.keyPressed("R");
+                    break;
                 case KeyEvent.VK_F:
                     mainGame.keyPressed("F");
+                    break;
+                case KeyEvent.VK_A:
+                    mainGame.keyPressed("A");
+                    break;
+                case KeyEvent.VK_S:
+                    mainGame.keyPressed("S");
+                    break;
+                case KeyEvent.VK_Q:
+                    mainGame.keyPressed("Q");
+                    break;
+                case KeyEvent.VK_W:
+                    mainGame.keyPressed("W");
                     break;
             }
         }
@@ -55,7 +95,8 @@ public class GameFrame extends JFrame implements ActionListener {
     Timer timer;
     boolean running = false;
     int SCREEN_WIDTH = 800, SCREEN_HEIGHT = 600;
-    int DELAY = 1000 / 60;
+//    int DELAY = 1000 / 60;
+    int DELAY = 5;
     Cartridge cart;
     Bus nes;
     boolean bEmulationRun = false;
@@ -66,7 +107,10 @@ public class GameFrame extends JFrame implements ActionListener {
     GameFrame(){
         try {
             //cart = new Cartridge("D:\\Projects\\Java\\nes-emulator-java\\Test Roms\\Super Mario Bros (E).nes");
-            cart = new Cartridge("D:\\Projects\\Java\\nes-emulator-java\\Test Roms\\color_test.nes");
+            //cart = new Cartridge("D:\\Projects\\Java\\nes-emulator-java\\Test Roms\\nestest.nes");
+            //cart = new Cartridge("D:\\Projects\\Java\\nes-emulator-java-overhaul\\Test Roms\\color_test.nes");
+            cart = new Cartridge("D:\\Projects\\Java\\nes-emulator-java\\Test Roms\\Donkey Kong (World) (Rev A).nes");
+            //cart = new Cartridge("D:\\Projects\\Java\\nes-emulator-java\\Test Roms\\Fire Emblem Gaiden (J) [T-Eng97b].nes");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -98,6 +142,36 @@ public class GameFrame extends JFrame implements ActionListener {
             nes.ppu.frame_complete = false;
         }
         this.gamePanel.gameLoop();
+    }
+
+    public void keyReleased(String key){
+        switch (key){
+            case "S":
+                nes.controller[0] &= ~0x80;
+                break;
+            case "A":
+                nes.controller[0] &= ~0x40;
+                break;
+            case "Q":
+                nes.controller[0] &= ~0x20;
+                break;
+            case "W":
+                nes.controller[0] &= ~0x10;
+                break;
+            case "UP":
+                nes.controller[0] &= ~0x08;
+                break;
+            case "DOWN":
+                nes.controller[0] &= ~0x04;
+                break;
+            case "LEFT":
+                nes.controller[0] &= ~0x02;
+                break;
+            case "RIGHT":
+                nes.controller[0] &= ~0x01;
+                break;
+        }
+//        System.out.println(nes.controller[0]);
     }
 
 
@@ -138,6 +212,33 @@ public class GameFrame extends JFrame implements ActionListener {
         if (key == "P"){
             this.nSelectedPalette = (short) ((this.nSelectedPalette + 1) & 0x07);
         }
+        switch (key){
+            case "S":
+                nes.controller[0] |= 0x80;
+                break;
+            case "A":
+                nes.controller[0] |= 0x40;
+                break;
+            case "Q":
+                nes.controller[0] |= 0x20;
+                break;
+            case "W":
+                nes.controller[0] |= 0x10;
+                break;
+            case "UP":
+                nes.controller[0] |= 0x08;
+                break;
+            case "DOWN":
+                nes.controller[0] |= 0x04;
+                break;
+            case "LEFT":
+                nes.controller[0] |= 0x02;
+                break;
+            case "RIGHT":
+                nes.controller[0] |= 0x01;
+                break;
+        }
+//        System.out.println(nes.controller[0]);
     }
 
     @Override

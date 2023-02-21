@@ -307,18 +307,18 @@ public abstract class Olc2C02A {
             REG;
         }
 
-        private short reg;
-        private short coarse_x;
-        private short coarse_y;
-        private short nametable_x;
-        private short nametable_y;
-        private short fine_y;
-        private short unused;
+        private int reg;
+        private int coarse_x;
+        private int coarse_y;
+        private int nametable_x;
+        private int nametable_y;
+        private int fine_y;
+        private int unused;
         public Loopy_register(){
             this.reg = 0x00;
             this.updateAttribute();
         }
-        public void set(MEMBER flag, short val){
+        public void set(MEMBER flag, int val){
             switch (flag){
                 case COARSE_X:
                     this.coarse_x = val;
@@ -349,7 +349,7 @@ public abstract class Olc2C02A {
                 this.updateRegister();
             }
         }
-        public short get(MEMBER flag){
+        public int get(MEMBER flag){
             switch (flag){
                 case COARSE_X:
                     return this.coarse_x;
@@ -366,16 +366,16 @@ public abstract class Olc2C02A {
                 case REG:
                     return this.reg;
             }
-            return (short) 0;
+            return 0;
         }
 
         private void updateAttribute(){
-            this.coarse_x = (short) ((this.reg % (1 << 5)) >> 0);
-            this.coarse_y = (short) ((this.reg % (1 << 10)) >> 5);
-            this.nametable_x = (short) ((this.reg % (1 << 11)) >> 10);
-            this.nametable_y = (short) ((this.reg % (1 << 12)) >> 11);
-            this.fine_y = (short) ((this.reg % (1 << 15)) >> 12);
-            this.unused = (short) ((this.reg % (1 << 16)) >> 15);
+            this.coarse_x = ((this.reg % (1 << 5)) >> 0);
+            this.coarse_y = ((this.reg % (1 << 10)) >> 5);
+            this.nametable_x = ((this.reg % (1 << 11)) >> 10);
+            this.nametable_y = ((this.reg % (1 << 12)) >> 11);
+            this.fine_y = ((this.reg % (1 << 15)) >> 12);
+            this.unused = ((this.reg % (1 << 16)) >> 15);
         }
 
         private void updateRegister(){
@@ -435,6 +435,27 @@ public abstract class Olc2C02A {
 
     }
 
+    public class sObjectAttributeEntry{
+        short y = 0;			// Y position of sprite
+        short id = 0;			// ID of tile from pattern memory
+        short attribute = 0;	// Flags define how sprite should be rendered
+        short x = 0;
+    }
+
+    public abstract short pOAMGet(short index);
+    public abstract void pOAMSet(short index, short data);
+    public sObjectAttributeEntry[] OAM = new sObjectAttributeEntry[64];
+
+    public short oam_addr = 0x00;
+
+    public sObjectAttributeEntry[] spriteScanline = new sObjectAttributeEntry[8];
+    public short sprite_count;
+    public short[] sprite_shifter_pattern_lo = new short[8];
+    public short[] sprite_shifter_pattern_hi = new short[8];
+
+    boolean bSpriteZeroHitPossible = false;
+    boolean bSpriteZeroBeingRendered = false;
+
     public Cartridge cart;
     public short[][] tblName;
     public short[] tblPalette;
@@ -468,6 +489,7 @@ public abstract class Olc2C02A {
     public abstract Sprite getScreen();
     public abstract Sprite getNameTable(short i);
     public abstract Sprite getPatternTable(short i, short palette);
+    public abstract Pixel getColourFromPaletteRam(short palette, short pixel);
     public boolean frame_complete = false;
     public boolean nmi = false;
     public int scanline = 0, cycle = 0;
@@ -482,4 +504,5 @@ public abstract class Olc2C02A {
 
     public abstract void ConnectCartridge(Cartridge cartridge);
     public abstract void clock();
+    public abstract void reset();
 }

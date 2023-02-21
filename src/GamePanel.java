@@ -1,7 +1,5 @@
 import javax.swing.*;
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.Collections;
 
 public class GamePanel extends JPanel{
     GameFrame mainGame;
@@ -23,7 +21,7 @@ public class GamePanel extends JPanel{
                     int pr = p.r, pg = p.g, pb = p.b, pa = p.a;
                     Color color = new Color(pr, pg, pb, pa);
                     g.setColor(color);
-                    g.drawRect((x + ic) * this.pixelSize, (y + ir) * this.pixelSize, this.pixelSize, this.pixelSize);
+                    g.drawRect((x + ic) * this.pixelSize, (y + ir) * this.pixelSize, this.pixelSize + 1, this.pixelSize + 1);
                 }
             }
         }
