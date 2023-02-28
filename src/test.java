@@ -19,6 +19,11 @@ public class test {
         }
         return c;
     }
+
+    public static int ushort(int a){
+        return a & 0xFFFF;
+    }
+
     public static void main(String[] args) {
 //        short a = 0b01101001;
 //        System.out.println(String.format("%x", a));

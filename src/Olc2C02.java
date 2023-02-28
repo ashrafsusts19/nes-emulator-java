@@ -258,12 +258,12 @@ public class Olc2C02 extends Olc2C02A{
         if (mask.get(Mask.MEMBER.RENDER_BACKGROUND) > 0)
         {
             // Shifting background tile pattern row
-            bg_shifter_pattern_lo <<= 1;
-            bg_shifter_pattern_hi <<= 1;
+            bg_shifter_pattern_lo = ushort(bg_shifter_pattern_lo << 1);
+            bg_shifter_pattern_hi = ushort(bg_shifter_pattern_hi << 1);
 
             // Shifting palette attributes by 1
-            bg_shifter_attrib_lo <<= 1;
-            bg_shifter_attrib_hi <<= 1;
+            bg_shifter_attrib_lo = ushort(bg_shifter_attrib_lo << 1);
+            bg_shifter_attrib_hi = ushort(bg_shifter_attrib_hi << 1);
         }
         if (mask.get(Mask.MEMBER.RENDER_SPRITES) > 0 && cycle >= 1 && cycle < 258)
         {
@@ -275,8 +275,8 @@ public class Olc2C02 extends Olc2C02A{
                 }
                 else
                 {
-                    sprite_shifter_pattern_lo[i] <<= 1;
-                    sprite_shifter_pattern_hi[i] <<= 1;
+                    sprite_shifter_pattern_lo[i] = ubyte((short) (sprite_shifter_pattern_lo[i] << 1));
+                    sprite_shifter_pattern_hi[i] = ubyte((short) (sprite_shifter_pattern_hi[i] << 1));
                 }
             }
         }
@@ -286,7 +286,7 @@ public class Olc2C02 extends Olc2C02A{
     public Pixel getColourFromPaletteRam(short palette, short pixel){
         palette = ubyte(palette);
         pixel = ubyte(pixel);
-        return this.palScreen[ppuRead((short) (0x3F00 + (palette << 2) + pixel)) & 0x3F];
+        return this.palScreen[ppuRead(0x3F00 + (palette << 2) + pixel) & 0x3F];
     }
 
     @Override
@@ -306,10 +306,10 @@ public class Olc2C02 extends Olc2C02A{
         palette = ubyte(palette);
         for (int nTileY = 0; nTileY < 16; nTileY++){
             for (int nTileX = 0; nTileX < 16; nTileX++){
-                int nOffset = nTileY * 256 + nTileX * 16;
+                int nOffset = ushort(nTileY * 256 + nTileX * 16);
                 for (int row = 0; row < 8; row++){
-                    short tile_lsb = ppuRead((short) (i * 0x1000 + nOffset + row + 0x0000));
-                    short tile_msb = ppuRead((short) (i * 0x1000 + nOffset + row + 0x0008));
+                    short tile_lsb = ppuRead(ushort(i * 0x1000 + nOffset + row + 0x0000));
+                    short tile_msb = ppuRead(ushort(i * 0x1000 + nOffset + row + 0x0008));
                     for (int col = 0; col < 8; col++){
                         short pixel = ubyte((short) ((tile_lsb & 0x01) << 1 | (tile_msb & 0x01)));
                         tile_lsb >>= 1;
@@ -393,6 +393,7 @@ public class Olc2C02 extends Olc2C02A{
 
     @Override
     public short cpuRead(int addr) {
+        addr = ushort(addr);
         short data = cpuRead(addr, false);
         return data;
     }
@@ -451,7 +452,7 @@ public class Olc2C02 extends Olc2C02A{
                 this.ppuWrite(vram_addr.get(Loopy_register.MEMBER.REG), data);
                 int treg = this.vram_addr.get(Loopy_register.MEMBER.REG);
                 treg += control.get(Control.MEMBER.INCREMENT_MODE) > 0? 32: 1;
-                vram_addr.set(Loopy_register.MEMBER.REG, treg);
+                vram_addr.set(Loopy_register.MEMBER.REG, ushort(treg));
                 break;
         }
     }
@@ -588,10 +589,10 @@ public class Olc2C02 extends Olc2C02A{
                                 (vram_addr.get(Loopy_register.MEMBER.REG) & 0x0FFF));
                         break;
                     case 2:
-                        bg_next_tile_attrib = ppuRead((0x23C0 | (vram_addr.get(Loopy_register.MEMBER.NAMETABLE_Y) << 11)
-                                | (vram_addr.get(Loopy_register.MEMBER.NAMETABLE_X) << 10)
-                                | ((vram_addr.get(Loopy_register.MEMBER.COARSE_Y) >> 2) << 3)
-                                | (vram_addr.get(Loopy_register.MEMBER.COARSE_X) >> 2)));
+                        bg_next_tile_attrib = ppuRead((0x23C0 | ushort(vram_addr.get(Loopy_register.MEMBER.NAMETABLE_Y) << 11)
+                                | ushort(vram_addr.get(Loopy_register.MEMBER.NAMETABLE_X) << 10)
+                                | ushort((vram_addr.get(Loopy_register.MEMBER.COARSE_Y) >> 2) << 3)
+                                | ushort(vram_addr.get(Loopy_register.MEMBER.COARSE_X) >> 2)));
                         if ((vram_addr.get(Loopy_register.MEMBER.COARSE_Y) & 0x02) > 0) {
                             bg_next_tile_attrib >>= 4;
                         }
@@ -601,39 +602,160 @@ public class Olc2C02 extends Olc2C02A{
                         bg_next_tile_attrib &= 0x03;
                         break;
                     case 4:
-                        bg_next_tile_lsb = ppuRead((control.get(Control.MEMBER.PATTERN_BACKGROUND) << 12)
-                                + (ushort(bg_next_tile_id) << 4)
+                        bg_next_tile_lsb = ppuRead(ushort(control.get(Control.MEMBER.PATTERN_BACKGROUND) << 12)
+                                + ushort(ushort(bg_next_tile_id) << 4)
                                 + (vram_addr.get(Loopy_register.MEMBER.FINE_Y)) + 0);
                         break;
                     case 6:
-                        bg_next_tile_msb = ppuRead(((control.get(Control.MEMBER.PATTERN_BACKGROUND) << 12)
-                                + (ushort(bg_next_tile_id) << 4)
-                                + (vram_addr.get(Loopy_register.MEMBER.FINE_Y)) + 8));
+                        bg_next_tile_msb = ppuRead(ushort(control.get(Control.MEMBER.PATTERN_BACKGROUND) << 12)
+                                + ushort(ushort(bg_next_tile_id) << 4)
+                                + ushort((vram_addr.get(Loopy_register.MEMBER.FINE_Y)) + 8));
                         break;
                     case 7:
                         this.IncrementScrollX();
                         break;
                 }
             }
+
             if (cycle == 256){
                 this.IncrementScrollY();
             }
+
             if (cycle == 257){
                 this.LoadBackgroundShifters();
                 this.TransferAddressX();
             }
+
             if (cycle == 338 || cycle == 340)
             {
                 bg_next_tile_id = ppuRead(0x2000 | (vram_addr.get(Loopy_register.MEMBER.REG) & 0x0FFF));
             }
+
             if (scanline == -1 && cycle >= 280 && cycle < 305){
                 TransferAddressY();
+            }
+
+            //Foreground
+            if (cycle == 257 && scanline >= 0) {
+                for (int i = 0; i < 8; i++){
+                    this.spriteScanline[i].y = 0xFF;
+                    this.spriteScanline[i].attribute =0xFF;
+                    this.spriteScanline[i].id = 0xFF;
+                    this.spriteScanline[i].x = 0xFF;
+                }
+
+                sprite_count = 0;
+
+                for (short i = 0; i < 8; i++) {
+                    sprite_shifter_pattern_lo[i] = 0;
+                    sprite_shifter_pattern_hi[i] = 0;
+                }
+                short nOAMEntry = 0;
+
+                bSpriteZeroHitPossible = false;
+
+                while (nOAMEntry < 64 && sprite_count < 9) {
+                    int diff = ushort(ushort(scanline) - ushort(OAM[nOAMEntry].y));
+                    if (diff >= 0 && diff < (control.get(Control.MEMBER.SPRITE_SIZE) > 0 ? 16 : 8)) {
+                        if (sprite_count < 8) {
+                            // Is this sprite sprite zero?
+                            if (nOAMEntry == 0) {
+                                bSpriteZeroHitPossible = true;
+                            }
+                            spriteScanline[sprite_count].x = OAM[nOAMEntry].x;
+                            spriteScanline[sprite_count].y = OAM[nOAMEntry].y;
+                            spriteScanline[sprite_count].attribute = OAM[nOAMEntry].attribute;
+                            spriteScanline[sprite_count].id = OAM[nOAMEntry].id;
+                            sprite_count++;
+                        }
+                    }
+                    nOAMEntry++;
+                } // End of sprite evaluation for next scanline
+
+                // Set sprite overflow flag
+                status.set(Status.MEMBER.SPRITE_OVERFLOW, (short) ((sprite_count > 8) ? 1 : 0));
+            }
+
+            if (cycle == 340)
+            {
+                for (short i = 0; i < sprite_count; i++) {
+                    short sprite_pattern_bits_lo, sprite_pattern_bits_hi;
+                    int sprite_pattern_addr_lo, sprite_pattern_addr_hi;
+
+                    if (control.get(Control.MEMBER.SPRITE_SIZE) == 0) {
+                        if ((spriteScanline[i].attribute & 0x80) == 0) {
+                            sprite_pattern_addr_lo =
+                                    ushort(ushort(control.get(Control.MEMBER.PATTERN_SPRITE) << 12)  // Which Pattern Table? 0KB or 4KB offset
+                                            | ushort(spriteScanline[i].id << 4)  // Which Cell? Tile ID * 16 (16 bytes per tile)
+                                            | ushort(scanline - spriteScanline[i].y)); // Which Row in cell? (0->7)
+
+                        }
+                        else {
+                            // Sprite is flipped vertically, i.e. upside down
+                            sprite_pattern_addr_lo =
+                                    ushort(ushort(control.get(Control.MEMBER.PATTERN_SPRITE) << 12)  // Which Pattern Table? 0KB or 4KB offset
+                                            | ushort(spriteScanline[i].id << 4)  // Which Cell? Tile ID * 16 (16 bytes per tile)
+                                            | ushort(7 - (scanline - spriteScanline[i].y))); // Which Row in cell? (7->0)
+                        }
+
+                    }
+                    else
+                    {
+                        // 8x16 Sprite Mode - The sprite attribute determines the pattern table
+                        if ((spriteScanline[i].attribute & 0x80) == 0) {
+                            // Sprite is NOT flipped vertically, i.e. normal
+                            if (scanline - spriteScanline[i].y < 8) {
+                                // Reading Top half Tile
+                                sprite_pattern_addr_lo =
+                                        ushort(ushort((spriteScanline[i].id & 0x01) << 12)  // Which Pattern Table? 0KB or 4KB offset
+                                                | ushort((spriteScanline[i].id & 0xFE) << 4)  // Which Cell? Tile ID * 16 (16 bytes per tile)
+                                                | ushort((scanline - spriteScanline[i].y) & 0x07)); // Which Row in cell? (0->7)
+                            }
+                            else {
+                                // Reading Bottom Half Tile
+                                sprite_pattern_addr_lo =
+                                        ushort(ushort((spriteScanline[i].id & 0x01) << 12)  // Which Pattern Table? 0KB or 4KB offset
+                                                | ushort(((spriteScanline[i].id & 0xFE) + 1) << 4)  // Which Cell? Tile ID * 16 (16 bytes per tile)
+                                                | ushort((scanline - spriteScanline[i].y) & 0x07)); // Which Row in cell? (0->7)
+                            }
+                        }
+                        else {
+                            if (scanline - spriteScanline[i].y < 8) {
+                                // Reading Top half Tile
+                                sprite_pattern_addr_lo =
+                                        ushort((ushort(spriteScanline[i].id & 0x01) << 12)    // Which Pattern Table? 0KB or 4KB offset
+                                                | ushort(((spriteScanline[i].id & 0xFE) + 1) << 4)    // Which Cell? Tile ID * 16 (16 bytes per tile)
+                                                | ushort(7 - (scanline - spriteScanline[i].y) & 0x07)); // Which Row in cell? (0->7)
+                            }
+                            else {
+                                // Reading Bottom Half Tile
+                                sprite_pattern_addr_lo =
+                                        ushort((ushort(spriteScanline[i].id & 0x01) << 12)    // Which Pattern Table? 0KB or 4KB offset
+                                                | ushort((spriteScanline[i].id & 0xFE) << 4)    // Which Cell? Tile ID * 16 (16 bytes per tile)
+                                                | ushort(7 - (scanline - spriteScanline[i].y) & 0x07)); // Which Row in cell? (0->7)
+                            }
+                        }
+                    }
+
+                    sprite_pattern_addr_hi = ushort(sprite_pattern_addr_lo + 8);
+
+                    sprite_pattern_bits_lo = ppuRead(sprite_pattern_addr_lo);
+                    sprite_pattern_bits_hi = ppuRead(sprite_pattern_addr_hi);
+
+                    if ((spriteScanline[i].attribute & 0x40) > 0){
+                        sprite_pattern_bits_lo = flipbyte(sprite_pattern_bits_lo);
+                        sprite_pattern_bits_hi = flipbyte(sprite_pattern_bits_hi);
+                    }
+                    sprite_shifter_pattern_lo[i] = sprite_pattern_bits_lo;
+                    sprite_shifter_pattern_hi[i] = sprite_pattern_bits_hi;
+                }
             }
         }
 
         if (scanline == 240){
-
+            //Nothing happens
         }
+
         if (scanline >= 241 && scanline < 261){
             if (this.scanline == 241 && this.cycle == 1){
                 this.status.set(Status.MEMBER.VERTICAL_BLANK, (short) 1);
@@ -680,16 +802,13 @@ public class Olc2C02 extends Olc2C02A{
                     short fg_pixel_hi = (short) ((sprite_shifter_pattern_hi[i] & 0x80) > 0 ? 1: 0);
                     fg_pixel = ubyte((short) ((fg_pixel_hi << 1) | fg_pixel_lo));
 
-                    fg_palette = (short) ((spriteScanline[i].attribute & 0x03) + 0x04);
+                    fg_palette = ubyte((short) ((spriteScanline[i].attribute & 0x03) + 0x04));
                     fg_priority = (short) ((spriteScanline[i].attribute & 0x20) == 0? 1 : 0);
 
-                    if (fg_pixel != 0)
-                    {
-                        if (i == 0) // Is this sprite zero?
-                        {
+                    if (fg_pixel != 0) {
+                        if (i == 0) {
                             bSpriteZeroBeingRendered = true;
                         }
-
                         break;
                     }
                 }
@@ -699,50 +818,38 @@ public class Olc2C02 extends Olc2C02A{
         short pixel = 0x00;   // The FINAL Pixel...
         short palette = 0x00; // The FINAL Palette...
 
-        if (bg_pixel == 0 && fg_pixel == 0)
-        {
+        if (bg_pixel == 0 && fg_pixel == 0) {
             pixel = 0x00;
             palette = 0x00;
         }
-        else if (bg_pixel == 0 && fg_pixel > 0)
-        {
+        else if (bg_pixel == 0 && fg_pixel > 0) {
             pixel = fg_pixel;
             palette = fg_palette;
         }
-        else if (bg_pixel > 0 && fg_pixel == 0)
-        {
+        else if (bg_pixel > 0 && fg_pixel == 0) {
             pixel = bg_pixel;
             palette = bg_palette;
         }
         else if (bg_pixel > 0 && fg_pixel > 0)
         {
-            if (fg_priority > 0)
-            {
+            if (fg_priority > 0) {
                 pixel = fg_pixel;
                 palette = fg_palette;
             }
-            else
-            {
+            else {
                 pixel = bg_pixel;
                 palette = bg_palette;
             }
 
-            if (bSpriteZeroHitPossible && bSpriteZeroBeingRendered)
-            {
-
-                if ((mask.get(Mask.MEMBER.RENDER_BACKGROUND) & mask.get(Mask.MEMBER.RENDER_SPRITES)) > 0)
-                {
-                    if (~(mask.get(Mask.MEMBER.RENDER_BACKGROUND_LEFT) | mask.get(Mask.MEMBER.RENDER_SPRITES_LEFT)) > 0)
-                    {
-                        if (cycle >= 9 && cycle < 258)
-                        {
+            if (bSpriteZeroHitPossible && bSpriteZeroBeingRendered) {
+                if ((mask.get(Mask.MEMBER.RENDER_BACKGROUND) & mask.get(Mask.MEMBER.RENDER_SPRITES)) > 0) {
+                    if (ushort(~(mask.get(Mask.MEMBER.RENDER_BACKGROUND_LEFT) | mask.get(Mask.MEMBER.RENDER_SPRITES_LEFT))) > 0) {
+                        if (cycle >= 9 && cycle < 258) {
                             status.set(Status.MEMBER.SPRITE_ZERO_HIT, (short) 1);
                         }
                     }
-                    else
-                    {
-                        if (cycle >= 1 && cycle < 258)
-                        {
+                    else {
+                        if (cycle >= 1 && cycle < 258) {
                             status.set(Status.MEMBER.SPRITE_ZERO_HIT, (short) 1);
                         }
                     }
@@ -752,6 +859,7 @@ public class Olc2C02 extends Olc2C02A{
 
 
         this.sprScreen.setPixel(cycle - 1, scanline, this.getColourFromPaletteRam(palette, pixel));
+
         this.cycle = ushort(this.cycle + 1);
         if (this.cycle >= 341){
             this.cycle = 0;
@@ -761,124 +869,7 @@ public class Olc2C02 extends Olc2C02A{
                 this.frame_complete = true;
             }
         }
-        if (cycle == 257 && scanline >= 0)
-        {
-            // Firstly, clear out the sprite memory. This memory is used to store the
-            // sprites to be rendered. It is not the OAM.
-            for (int i = 0; i < 8; i++){
-                this.spriteScanline[i].y = 0xFF;
-                this.spriteScanline[i].id = 0xFF;
-                this.spriteScanline[i].attribute = 0xFF;
-                this.spriteScanline[i].x = 0xFF;
-            }
 
-            this.sprite_count = 0;
-
-            // Secondly, clear out any residual information in sprite pattern shifters
-            for (short i = 0; i < 8; i++)
-            {
-                this.sprite_shifter_pattern_lo[i] = 0;
-                this.sprite_shifter_pattern_hi[i] = 0;
-            }
-
-            short nOAMEntry = 0;
-
-            this.bSpriteZeroHitPossible = false;
-
-            while (nOAMEntry < 64 && sprite_count < 9)
-            {
-                int diff = ushort(ushort(scanline) - ushort(OAM[nOAMEntry].y));
-
-                if (diff >= 0 && diff < (control.get(Control.MEMBER.SPRITE_SIZE) > 0 ? 16 : 8))
-                {
-                    // Sprite is visible
-                    if (sprite_count < 8)
-                    {
-                        if (nOAMEntry == 0)
-                        {
-                            this.bSpriteZeroHitPossible = true;
-                        }
-                        spriteScanline[sprite_count].y = OAM[nOAMEntry].y;
-                        spriteScanline[sprite_count].id = OAM[nOAMEntry].id;
-                        spriteScanline[sprite_count].attribute = OAM[nOAMEntry].attribute;
-                        spriteScanline[sprite_count].x = OAM[nOAMEntry].x;
-                        sprite_count++;
-                    }
-                }
-
-                nOAMEntry++;
-            } // End of sprite evaluation for next scanline
-
-            status.set(Status.MEMBER.SPRITE_OVERFLOW, (short) ((sprite_count > 8) ? 1 : 0));
-
-            if (cycle == 340)
-            {
-                for (short i = 0; i < sprite_count; i++) {
-                    short sprite_pattern_bits_lo, sprite_pattern_bits_hi;
-                    int sprite_pattern_addr_lo, sprite_pattern_addr_hi;
-                    if (control.get(Control.MEMBER.SPRITE_SIZE) == 0) {
-                        if ((spriteScanline[i].attribute & 0x80) == 0) {
-                            sprite_pattern_addr_lo =
-                                    ushort((control.get(Control.MEMBER.PATTERN_SPRITE) << 12  )  // Which Pattern Table? 0KB or 4KB offset
-                                            | (spriteScanline[i].id   << 4   )  // Which Cell? Tile ID * 16 (16 bytes per tile)
-                                            | (scanline - spriteScanline[i].y)); // Which Row in cell? (0->7))
-                        }
-                        else {
-                            sprite_pattern_addr_lo =
-                                    ushort((control.get(Control.MEMBER.PATTERN_SPRITE) << 12  )  // Which Pattern Table? 0KB or 4KB offset
-                                            | (spriteScanline[i].id   << 4   )  // Which Cell? Tile ID * 16 (16 bytes per tile)
-                                            | (7 - (scanline - spriteScanline[i].y))); // Which Row in cell? (7->0)
-                        }
-                    }
-                    else
-                    {
-                        if ((spriteScanline[i].attribute & 0x80) == 0) {
-                            if (scanline - spriteScanline[i].y < 8) {
-                                sprite_pattern_addr_lo =
-                                        ushort(((spriteScanline[i].id & 0x01)      << 12)  // Which Pattern Table? 0KB or 4KB offset
-                                                | ((spriteScanline[i].id & 0xFE)      << 4 )  // Which Cell? Tile ID * 16 (16 bytes per tile)
-                                                | ((scanline - spriteScanline[i].y) & 0x07 )); // Which Row in cell? (0->7)
-                            }
-                            else {
-                                sprite_pattern_addr_lo =
-                                        ushort(( (spriteScanline[i].id & 0x01)      << 12)  // Which Pattern Table? 0KB or 4KB offset
-                                                | (((spriteScanline[i].id & 0xFE) + 1) << 4 )  // Which Cell? Tile ID * 16 (16 bytes per tile)
-                                                | ((scanline - spriteScanline[i].y) & 0x07  )); // Which Row in cell? (0->7)
-                            }
-                        }
-                        else {
-                            if (scanline - spriteScanline[i].y < 8) {
-                                sprite_pattern_addr_lo =
-                                        ushort(( (spriteScanline[i].id & 0x01)      << 12)    // Which Pattern Table? 0KB or 4KB offset
-                                                | (((spriteScanline[i].id & 0xFE) + 1) << 4 )    // Which Cell? Tile ID * 16 (16 bytes per tile)
-                                                | (7 - (scanline - spriteScanline[i].y) & 0x07)); // Which Row in cell? (0->7)
-                            }
-                            else {
-                                // Reading Bottom Half Tile
-                                sprite_pattern_addr_lo =
-                                        ushort(((spriteScanline[i].id & 0x01)       << 12)    // Which Pattern Table? 0KB or 4KB offset
-                                                | ((spriteScanline[i].id & 0xFE)       << 4 )    // Which Cell? Tile ID * 16 (16 bytes per tile)
-                                                | (7 - (scanline - spriteScanline[i].y) & 0x07)); // Which Row in cell? (0->7)
-                            }
-                        }
-                    }
-
-                    sprite_pattern_addr_hi = sprite_pattern_addr_lo + 8;
-
-                    sprite_pattern_bits_lo = ppuRead(sprite_pattern_addr_lo);
-                    sprite_pattern_bits_hi = ppuRead(sprite_pattern_addr_hi);
-
-                    if ((spriteScanline[i].attribute & 0x40) > 0)
-                    {
-                        sprite_pattern_bits_lo = flipbyte(sprite_pattern_bits_lo);
-                        sprite_pattern_bits_hi = flipbyte(sprite_pattern_bits_hi);
-                    }
-
-                    sprite_shifter_pattern_lo[i] = sprite_pattern_bits_lo;
-                    sprite_shifter_pattern_hi[i] = sprite_pattern_bits_hi;
-                }
-            }
-        }
     }
 
     @Override

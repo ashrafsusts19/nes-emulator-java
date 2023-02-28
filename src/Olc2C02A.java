@@ -15,6 +15,7 @@ public abstract class Olc2C02A {
             this.updateAttribute();
         }
         public void set(MEMBER flag, short val){
+            val = ubyte(val);
             switch (flag){
                 case UNUSED:
                     this.unused = val;
@@ -99,6 +100,7 @@ public abstract class Olc2C02A {
             this.updateAttribute();
         }
         public void set(MEMBER flag, short val){
+            val = ubyte(val);
             switch (flag){
                 case GRAYSCALE:
                     this.grayscale = val;
@@ -211,6 +213,7 @@ public abstract class Olc2C02A {
             this.updateAttribute();
         }
         public void set(MEMBER flag, short val){
+            val = ubyte(val);
             switch (flag){
                 case NAMETABLE_X:
                     this.nametable_x = val;
@@ -319,6 +322,7 @@ public abstract class Olc2C02A {
             this.updateAttribute();
         }
         public void set(MEMBER flag, int val){
+            val = ushort(val);
             switch (flag){
                 case COARSE_X:
                     this.coarse_x = val;
@@ -379,7 +383,7 @@ public abstract class Olc2C02A {
         }
 
         private void updateRegister(){
-            short tmpreg = 0x00;
+            short tmpreg = 0x0000;
             tmpreg |= this.unused; tmpreg <<= 3;
             tmpreg |= this.fine_y; tmpreg <<= 1;
             tmpreg |= this.nametable_y; tmpreg <<= 1;
@@ -435,6 +439,13 @@ public abstract class Olc2C02A {
 
     }
 
+    private int ushort(int a){
+        return a & 0xFFFF;
+    }
+    private short ubyte (short a){
+        return (short) (a & 0xFF);
+    }
+
     public class sObjectAttributeEntry{
         short y = 0;			// Y position of sprite
         short id = 0;			// ID of tile from pattern memory
@@ -465,14 +476,14 @@ public abstract class Olc2C02A {
     public short ppu_data_buffer = 0x00;
     //public int ppu_address = 0x0000;
 
-    short bg_next_tile_id     = 0x00;
-    short bg_next_tile_attrib = 0x00;
-    short bg_next_tile_lsb    = 0x00;
-    short bg_next_tile_msb    = 0x00;
-    int bg_shifter_pattern_lo = 0x0000;
-    int bg_shifter_pattern_hi = 0x0000;
-    int bg_shifter_attrib_lo  = 0x0000;
-    int bg_shifter_attrib_hi  = 0x0000;
+    public short bg_next_tile_id     = 0x00;
+    public short bg_next_tile_attrib = 0x00;
+    public short bg_next_tile_lsb    = 0x00;
+    public short bg_next_tile_msb    = 0x00;
+    public int bg_shifter_pattern_lo = 0x0000;
+    public int bg_shifter_pattern_hi = 0x0000;
+    public int bg_shifter_attrib_lo  = 0x0000;
+    public int bg_shifter_attrib_hi  = 0x0000;
 
     public Pixel[] palScreen;
     public Sprite sprScreen = new Sprite(256, 240);
@@ -492,7 +503,10 @@ public abstract class Olc2C02A {
     public abstract Pixel getColourFromPaletteRam(short palette, short pixel);
     public boolean frame_complete = false;
     public boolean nmi = false;
+    public boolean scanline_trigger = false;
     public int scanline = 0, cycle = 0;
+    public boolean odd_frame = false;
+
 
     public abstract short cpuRead(int addr, boolean readonly);
     public abstract short cpuRead(int addr);

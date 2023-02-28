@@ -96,7 +96,7 @@ public class GameFrame extends JFrame implements ActionListener {
     boolean running = false;
     int SCREEN_WIDTH = 800, SCREEN_HEIGHT = 600;
 //    int DELAY = 1000 / 60;
-    int DELAY = 5;
+    int DELAY = 1;
     Cartridge cart;
     Bus nes;
     boolean bEmulationRun = false;
@@ -106,10 +106,10 @@ public class GameFrame extends JFrame implements ActionListener {
 
     GameFrame(){
         try {
-            //cart = new Cartridge("D:\\Projects\\Java\\nes-emulator-java\\Test Roms\\Super Mario Bros (E).nes");
+            cart = new Cartridge("D:\\Projects\\Java\\nes-emulator-java\\Test Roms\\Super Mario Bros (E).nes");
             //cart = new Cartridge("D:\\Projects\\Java\\nes-emulator-java\\Test Roms\\nestest.nes");
             //cart = new Cartridge("D:\\Projects\\Java\\nes-emulator-java-overhaul\\Test Roms\\color_test.nes");
-            cart = new Cartridge("D:\\Projects\\Java\\nes-emulator-java\\Test Roms\\Donkey Kong (World) (Rev A).nes");
+            //cart = new Cartridge("D:\\Projects\\Java\\nes-emulator-java\\Test Roms\\Donkey Kong (World) (Rev A).nes");
             //cart = new Cartridge("D:\\Projects\\Java\\nes-emulator-java\\Test Roms\\Fire Emblem Gaiden (J) [T-Eng97b].nes");
         } catch (IOException e) {
             e.printStackTrace();
