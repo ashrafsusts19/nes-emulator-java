@@ -103,6 +103,8 @@ public class GameFrame extends JFrame implements ActionListener {
     long fResidualTime = 0l;
     GamePanel gamePanel;
     short nSelectedPalette = 0x00;
+    int frameSkip = 2;
+    int frameCount = 0;
 
     GameFrame(){
         try {
@@ -141,7 +143,13 @@ public class GameFrame extends JFrame implements ActionListener {
             while (!nes.ppu.frame_complete);
             nes.ppu.frame_complete = false;
         }
-        this.gamePanel.gameLoop();
+        if (this.frameCount == this.frameSkip){
+            this.gamePanel.gameLoop();
+            this.frameCount = 0;
+        }
+        else {
+            this.frameCount++;
+        }
     }
 
     public void keyReleased(String key){
